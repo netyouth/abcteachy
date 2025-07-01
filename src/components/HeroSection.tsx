@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Play, MessageCircle, BookOpen, HelpCircle } from "lucide-react";
+import { MessageCircle, BookOpen, Users } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -15,8 +15,7 @@ const HeroSection = () => {
                 <span className="text-coral">English</span>
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
-                ABC Teachy helps you master English conversation skills with 
-                personalized lessons and friendly guidance.
+                ABC Teachy connects you with friendly, qualified English tutors for personalized lessons.
               </p>
             </div>
             
@@ -24,77 +23,55 @@ const HeroSection = () => {
               size="lg" 
               className="bg-coral hover:bg-coral/90 text-white px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
-              Start Learning
+              Book a Tutor
             </Button>
           </div>
           
-          {/* Right Content - Phone Mockup */}
+          {/* Right Content - Illustration */}
           <div className="relative flex justify-center lg:justify-end">
-            <div className="relative">
-              {/* Phone Frame */}
-              <div className="w-80 h-[600px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl">
-                <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
-                  {/* Phone Screen Content */}
-                  <div className="p-6 h-full flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-lg font-semibold text-gray-900">English Lesson</h2>
-                      <div className="w-8 h-8 bg-coral rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm">👁️</span>
+            <div className="relative w-full max-w-md">
+              {/* Main illustration container */}
+              <div className="bg-coral-light rounded-3xl p-8 relative overflow-hidden">
+                {/* Tutor and Student illustration */}
+                <div className="space-y-6">
+                  {/* Conversation bubbles */}
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-2xl p-4 shadow-sm max-w-xs">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-coral rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm">👩‍🏫</span>
+                        </div>
+                        <p className="text-gray-800 text-sm">Hello! Ready to practice?</p>
                       </div>
                     </div>
-                    
-                    {/* Conversation Bubbles */}
-                    <div className="space-y-4 mb-8 flex-1">
-                      <div className="bg-gray-100 rounded-2xl p-4 max-w-xs">
-                        <p className="text-gray-800">Hello! How are you today?</p>
-                      </div>
-                      <div className="bg-coral text-white rounded-2xl p-4 max-w-xs ml-auto">
-                        <p>I'm doing great, thank you!</p>
-                      </div>
-                      <div className="bg-gray-100 rounded-2xl p-4 max-w-xs">
-                        <p className="text-gray-800">Perfect pronunciation! ✨</p>
+                    <div className="bg-coral text-white rounded-2xl p-4 max-w-xs ml-auto shadow-sm">
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm">Yes, I'm excited to learn!</p>
+                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm">👨‍🎓</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Vocabulary Section */}
-                    <div className="bg-coral-light rounded-xl p-4 mb-6">
-                      <h3 className="font-semibold text-gray-900 mb-3">Today's Words</h3>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="bg-white px-3 py-1 rounded-full text-sm font-medium">great</span>
-                        <span className="bg-white px-3 py-1 rounded-full text-sm font-medium">perfect</span>
-                        <span className="bg-white px-3 py-1 rounded-full text-sm font-medium">today</span>
-                      </div>
+                  </div>
+                  
+                  {/* Learning elements */}
+                  <div className="flex justify-center space-x-4">
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <BookOpen className="w-6 h-6 text-coral" />
                     </div>
-                    
-                    {/* Feature Buttons */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="bg-white border-2 border-coral rounded-xl p-3 text-center hover:bg-coral hover:text-white transition-colors cursor-pointer">
-                        <Play className="w-5 h-5 mx-auto mb-1" />
-                        <span className="text-xs font-medium">Practice Speaking</span>
-                      </div>
-                      <div className="bg-white border-2 border-coral rounded-xl p-3 text-center hover:bg-coral hover:text-white transition-colors cursor-pointer">
-                        <BookOpen className="w-5 h-5 mx-auto mb-1" />
-                        <span className="text-xs font-medium">Step by Step</span>
-                      </div>
-                      <div className="bg-white border-2 border-coral rounded-xl p-3 text-center hover:bg-coral hover:text-white transition-colors cursor-pointer">
-                        <HelpCircle className="w-5 h-5 mx-auto mb-1" />
-                        <span className="text-xs font-medium">Ask Questions</span>
-                      </div>
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <MessageCircle className="w-6 h-6 text-coral" />
+                    </div>
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <Users className="w-6 h-6 text-coral" />
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Floating Elements */}
-              <div className="absolute -top-4 -left-4 w-12 h-12 bg-coral rounded-full flex items-center justify-center animate-float shadow-lg">
-                <span className="text-white font-bold">A</span>
-              </div>
-              <div className="absolute -top-2 -right-6 w-10 h-10 bg-coral/80 rounded-full flex items-center justify-center animate-float shadow-lg" style={{animationDelay: '1s'}}>
-                <span className="text-white font-bold">B</span>
-              </div>
-              <div className="absolute -bottom-6 -left-2 w-8 h-8 bg-coral/60 rounded-full flex items-center justify-center animate-float shadow-lg" style={{animationDelay: '2s'}}>
-                <span className="text-white font-bold text-sm">C</span>
+              {/* Floating mascot */}
+              <div className="absolute -top-4 -right-4 w-16 h-16 bg-coral rounded-full flex items-center justify-center animate-float shadow-lg">
+                <span className="text-white text-2xl">📚</span>
               </div>
             </div>
           </div>

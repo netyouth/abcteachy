@@ -10,22 +10,25 @@ const Header = () => {
           {/* Logo */}
           <div className="flex items-center space-x-3">
             <img 
-              src="/lovable-uploads/401891d1-7be9-4659-bf65-39a66248f7bd.png" 
+              src="/lovable-uploads/a48522f4-db07-475a-b8dc-96da5a16426a.png" 
               alt="ABC Teachy Logo" 
-              className="h-10 w-auto"
+              className="h-16 w-auto"
             />
           </div>
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#overview" className="text-gray-700 hover:text-coral font-medium transition-colors">
-              Overview
+            <a href="#tutors" className="text-gray-700 hover:text-coral font-medium transition-colors">
+              Find Tutors
             </a>
             <a href="#students" className="text-gray-700 hover:text-coral font-medium transition-colors">
               For Students
             </a>
-            <a href="#parents" className="text-gray-700 hover:text-coral font-medium transition-colors">
-              For Parents
+            <a href="#teachers" className="text-gray-700 hover:text-coral font-medium transition-colors">
+              For Teachers
+            </a>
+            <a href="#how-it-works" className="text-gray-700 hover:text-coral font-medium transition-colors">
+              How It Works
             </a>
           </nav>
           
