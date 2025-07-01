@@ -45,12 +45,19 @@ All colors MUST be HSL.
     --coral-light: 9 100% 94%;
 
     --sidebar-background: 0 0% 98%;
+
     --sidebar-foreground: 240 5.3% 26.1%;
+
     --sidebar-primary: 240 5.9% 10%;
+
     --sidebar-primary-foreground: 0 0% 98%;
+
     --sidebar-accent: 240 4.8% 95.9%;
+
     --sidebar-accent-foreground: 240 5.9% 10%;
+
     --sidebar-border: 220 13% 91%;
+
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -99,127 +106,6 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-inter overflow-x-hidden;
-    cursor: none;
-  }
-
-  /* Custom cursor */
-  .custom-cursor {
-    width: 20px;
-    height: 20px;
-    border: 2px solid hsl(var(--coral));
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 9999;
-    mix-blend-mode: difference;
-    transition: all 0.1s ease;
-  }
-
-  .custom-cursor.hover {
-    width: 40px;
-    height: 40px;
-    background: hsl(var(--coral) / 0.1);
-    border-color: hsl(var(--coral));
-  }
-
-  /* Pixie dust particles */
-  .pixie-dust {
-    position: fixed;
-    width: 4px;
-    height: 4px;
-    background: hsl(var(--coral));
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9998;
-    opacity: 0;
-    animation: sparkle 1s ease-out forwards;
-  }
-
-  @keyframes sparkle {
-    0% {
-      opacity: 1;
-      transform: scale(0) rotate(0deg);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1) rotate(180deg);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(0) rotate(360deg);
-    }
-  }
-
-  /* Floating animation for elements */
-  @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    25% { transform: translateY(-10px) rotate(2deg); }
-    50% { transform: translateY(-5px) rotate(0deg); }
-    75% { transform: translateY(-15px) rotate(-2deg); }
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px hsl(var(--coral) / 0.3); }
-    50% { box-shadow: 0 0 40px hsl(var(--coral) / 0.6), 0 0 60px hsl(var(--coral) / 0.3); }
-  }
-
-  @keyframes bounce-gentle {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-  }
-
-  @keyframes slide-up {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  .animate-float { animation: float 6s ease-in-out infinite; }
-  .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
-  .animate-bounce-gentle { animation: bounce-gentle 2s ease-in-out infinite; }
-  .animate-slide-up { animation: slide-up 0.6s ease-out; }
-  .animate-fade-in { animation: fade-in 0.8s ease-out; }
-
-  /* Interactive hover effects */
-  .hover-lift {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .hover-lift:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  }
-
-  .hover-scale {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .hover-scale:hover {
-    transform: scale(1.05);
-  }
-
-  .hover-glow {
-    transition: all 0.3s ease;
-  }
-
-  .hover-glow:hover {
-    box-shadow: 0 0 30px hsl(var(--coral) / 0.4);
-  }
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
-  .custom-cursor,
-  .pixie-dust {
-    display: none;
-  }
-  
-  body {
-    cursor: auto;
+    @apply bg-background text-foreground font-inter;
   }
 }
