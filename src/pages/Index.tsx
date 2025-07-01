@@ -7,10 +7,12 @@ import ForTeachersSection from "@/components/ForTeachersSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import Footer from "@/components/Footer";
+import InteractiveCursor from "@/components/InteractiveCursor";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-white">
+      <InteractiveCursor />
       <Header />
       <HeroSection />
       <ForStudentsSection />
