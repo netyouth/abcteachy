@@ -4,7 +4,7 @@ import { LogIn } from "lucide-react";
 
 const Header = () => {
   return (
-    <header className="w-full bg-white border-b border-gray-100">
+    <header className="w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -18,25 +18,25 @@ const Header = () => {
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#tutors" className="text-gray-700 hover:text-coral font-medium transition-colors">
+            <a href="#tutors" className="text-gray-700 hover:text-learning-blue font-medium transition-all duration-200 hover-lift">
               Find Tutors
             </a>
-            <a href="#students" className="text-gray-700 hover:text-coral font-medium transition-colors">
+            <a href="#students" className="text-gray-700 hover:text-learning-blue font-medium transition-all duration-200 hover-lift">
               For Students
             </a>
-            <a href="#teachers" className="text-gray-700 hover:text-coral font-medium transition-colors">
+            <a href="#teachers" className="text-gray-700 hover:text-learning-blue font-medium transition-all duration-200 hover-lift">
               For Teachers
             </a>
-            <a href="#how-it-works" className="text-gray-700 hover:text-coral font-medium transition-colors">
+            <a href="#how-it-works" className="text-gray-700 hover:text-learning-blue font-medium transition-all duration-200 hover-lift">
               How It Works
             </a>
           </nav>
           
-          {/* Sign In Button */}
+          {/* Sign In Button - Trust Building Blue */}
           <div className="flex items-center space-x-4">
             <Button 
               variant="outline" 
-              className="border-coral text-coral hover:bg-coral hover:text-white transition-all duration-200"
+              className="border-learning-blue text-learning-blue hover:bg-learning-blue hover:text-white transition-all duration-200 hover-glow"
             >
               <LogIn className="w-4 h-4 mr-2" />
               Sign In

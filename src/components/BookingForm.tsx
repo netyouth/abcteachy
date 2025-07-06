@@ -62,18 +62,18 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
   };
 
   return (
-    <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-coral/10 relative overflow-hidden max-w-md w-full">
+    <div className="bg-white rounded-3xl p-8 shadow-2xl border-2 border-learning-blue/10 relative overflow-hidden max-w-md w-full hover-glow">
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+        className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors hover-lift"
       >
         <X className="w-4 h-4 text-gray-600" />
       </button>
 
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-coral rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-learning-blue rounded-full flex items-center justify-center mx-auto mb-4 pulse-trust">
           <span className="text-white text-2xl">👩‍🏫</span>
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Book Your Tutor</h2>
@@ -89,7 +89,7 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
             placeholder="Your full name"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className="pl-10 h-12 border-2 border-gray-200 focus:border-coral rounded-xl"
+            className="pl-10 h-12 border-2 border-gray-200 focus:border-learning-blue rounded-xl transition-all duration-200"
             required
           />
         </div>
@@ -101,7 +101,7 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
             placeholder="Your email address"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className="pl-10 h-12 border-2 border-gray-200 focus:border-coral rounded-xl"
+            className="pl-10 h-12 border-2 border-gray-200 focus:border-learning-blue rounded-xl transition-all duration-200"
             required
           />
         </div>
@@ -112,14 +112,14 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
             placeholder="Tell us about your English learning goals (optional)"
             value={formData.message}
             onChange={(e) => handleInputChange('message', e.target.value)}
-            className="pl-10 pt-4 min-h-[100px] border-2 border-gray-200 focus:border-coral rounded-xl resize-none"
+            className="pl-10 pt-4 min-h-[100px] border-2 border-gray-200 focus:border-learning-blue rounded-xl resize-none transition-all duration-200"
           />
         </div>
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-coral hover:bg-coral/90 text-white h-12 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none"
+          className="w-full bg-learning-blue hover:bg-learning-blue-dark text-white h-12 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none pulse-trust"
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-2">
@@ -136,8 +136,8 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
       </form>
 
       {/* Decorative elements */}
-      <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-coral-light rounded-full opacity-50" />
-      <div className="absolute -top-2 -left-2 w-8 h-8 bg-coral/20 rounded-full" />
+      <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-progress-green-light rounded-full opacity-50" />
+      <div className="absolute -top-2 -left-2 w-8 h-8 bg-learning-blue/20 rounded-full animate-glow" />
     </div>
   );
 };
