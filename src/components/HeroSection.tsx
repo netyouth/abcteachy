@@ -40,46 +40,49 @@ const HeroSection = () => {
             </Button>
           </div>
           
-          {/* Right Content - Illustration or Form */}
+          {/* Right Content - Video Card or Form */}
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative w-full max-w-md">
               {!showBookingForm ? (
-                // Original illustration
-                <div className="bg-coral-light rounded-3xl p-8 relative overflow-hidden">
-                  {/* Tutor and Student illustration */}
-                  <div className="space-y-6">
-                    {/* Conversation bubbles */}
-                    <div className="space-y-4">
-                      <div className="bg-white rounded-2xl p-4 shadow-sm max-w-xs">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-coral rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm">👩‍🏫</span>
-                          </div>
-                          <p className="text-gray-800 text-sm">Hello! Ready to practice?</p>
+                // Video Card
+                <div className="bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 relative overflow-hidden">
+                  <div className="aspect-video rounded-2xl overflow-hidden bg-gray-100">
+                    <video
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                    >
+                      <source 
+                        src="https://orwybezmxvlgenhvwqhj.supabase.co/storage/v1/object/public/teachies//Teachy%20Cat%20Supabase%20Video.mp4" 
+                        type="video/mp4" 
+                      />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  
+                  {/* Video Card Footer */}
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Interactive Learning
+                      </h3>
+                      <div className="flex space-x-2">
+                        <div className="bg-coral-light rounded-xl p-2">
+                          <BookOpen className="w-4 h-4 text-coral" />
                         </div>
-                      </div>
-                      <div className="bg-coral text-white rounded-2xl p-4 max-w-xs ml-auto shadow-sm">
-                        <div className="flex items-center space-x-2">
-                          <p className="text-sm">Yes, I'm excited to learn!</p>
-                          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm">👨‍🎓</span>
-                          </div>
+                        <div className="bg-coral-light rounded-xl p-2">
+                          <MessageCircle className="w-4 h-4 text-coral" />
+                        </div>
+                        <div className="bg-coral-light rounded-xl p-2">
+                          <Users className="w-4 h-4 text-coral" />
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Learning elements */}
-                    <div className="flex justify-center space-x-4">
-                      <div className="bg-white rounded-xl p-3 shadow-sm">
-                        <BookOpen className="w-6 h-6 text-coral" />
-                      </div>
-                      <div className="bg-white rounded-xl p-3 shadow-sm">
-                        <MessageCircle className="w-6 h-6 text-coral" />
-                      </div>
-                      <div className="bg-white rounded-xl p-3 shadow-sm">
-                        <Users className="w-6 h-6 text-coral" />
-                      </div>
-                    </div>
+                    <p className="text-sm text-gray-600">
+                      Experience personalized English learning with our AI-powered tutoring system.
+                    </p>
                   </div>
                 </div>
               ) : (
