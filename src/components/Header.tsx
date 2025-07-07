@@ -1,45 +1,44 @@
 
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
 
 const Header = () => {
   return (
-    <header className="w-full bg-white border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-6 py-4">
+    <header className="w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 fixed top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/a48522f4-db07-475a-b8dc-96da5a16426a.png" 
-              alt="ABC Teachy Logo" 
-              className="h-16 w-auto"
-            />
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
+            </div>
+            <span className="text-xl font-bold text-gray-900">ABC Teachy</span>
           </div>
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#tutors" className="text-gray-700 hover:text-coral font-medium transition-colors">
-              Find Tutors
-            </a>
-            <a href="#students" className="text-gray-700 hover:text-coral font-medium transition-colors">
-              For Students
-            </a>
-            <a href="#teachers" className="text-gray-700 hover:text-coral font-medium transition-colors">
-              For Teachers
-            </a>
-            <a href="#how-it-works" className="text-gray-700 hover:text-coral font-medium transition-colors">
-              How It Works
-            </a>
+            <button className="text-gray-700 hover:text-gray-900 font-medium transition-colors flex items-center space-x-1">
+              <span>Explore</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button className="text-gray-700 hover:text-gray-900 font-medium transition-colors flex items-center space-x-1">
+              <span>English</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </nav>
           
-          {/* Sign In Button */}
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
-              className="border-coral text-coral hover:bg-coral hover:text-white transition-all duration-200"
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              Sign In
+          {/* Get Started Button */}
+          <div className="flex items-center">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 flex items-center space-x-2">
+              <span>Get Started</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </Button>
           </div>
         </div>
