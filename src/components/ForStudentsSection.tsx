@@ -6,44 +6,27 @@ const ForStudentsSection = () => {
     {
       icon: Users,
       title: "Choose Your Perfect Tutor",
-      description: "Browse profiles and find a tutor who matches your learning style and goals.",
-      color: "learning-blue"
+      description: "Browse profiles and find a tutor who matches your learning style and goals."
     },
     {
       icon: Calendar,
       title: "Flexible Scheduling",
-      description: "Book lessons at times that work for you, with easy rescheduling options.",
-      color: "energy-orange"
+      description: "Book lessons at times that work for you, with easy rescheduling options."
     },
     {
       icon: DollarSign,
       title: "Affordable Rates",
-      description: "Quality English tutoring at prices that fit your budget.",
-      color: "progress-green"
+      description: "Quality English tutoring at prices that fit your budget."
     },
     {
       icon: TrendingUp,
       title: "Progress Tracking",
-      description: "Monitor your improvement with detailed progress reports and feedback.",
-      color: "progress-green"
+      description: "Monitor your improvement with detailed progress reports and feedback."
     }
   ];
 
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case "learning-blue":
-        return "bg-learning-blue-light text-learning-blue";
-      case "energy-orange":
-        return "bg-energy-orange-light text-energy-orange";
-      case "progress-green":
-        return "bg-progress-green-light text-progress-green";
-      default:
-        return "bg-learning-blue-light text-learning-blue";
-    }
-  };
-
   return (
-    <section id="students" className="w-full bg-gray-50/50 py-20">
+    <section id="students" className="w-full bg-gray-50 py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -56,9 +39,9 @@ const ForStudentsSection = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {benefits.map((benefit, index) => (
-            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-2 group">
-              <div className={`w-12 h-12 ${getColorClasses(benefit.color)} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                <benefit.icon className="w-6 h-6" />
+            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-coral-light rounded-xl flex items-center justify-center mb-4">
+                <benefit.icon className="w-6 h-6 text-coral" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {benefit.title}

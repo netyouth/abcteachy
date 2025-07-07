@@ -28,28 +28,10 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				
-				// Strategic Color System
-				'learning-blue': {
-					DEFAULT: 'hsl(var(--learning-blue))',
-					light: 'hsl(var(--learning-blue-light))',
-					dark: 'hsl(var(--learning-blue-dark))',
-				},
-				'energy-orange': {
-					DEFAULT: 'hsl(var(--energy-orange))',
-					light: 'hsl(var(--energy-orange-light))',
-				},
-				'progress-green': {
-					DEFAULT: 'hsl(var(--progress-green))',
-					light: 'hsl(var(--progress-green-light))',
-				},
-				
-				// Legacy coral mapping for backward compatibility
 				coral: {
 					DEFAULT: 'hsl(var(--coral))',
 					light: 'hsl(var(--coral-light))',
 				},
-				
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
@@ -118,21 +100,12 @@ export default {
 					'50%': {
 						transform: 'translateY(-10px)'
 					}
-				},
-				'glow': {
-					'0%, 100%': {
-						opacity: '0.5'
-					},
-					'50%': {
-						opacity: '1'
-					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'float': 'float 3s ease-in-out infinite',
-				'glow': 'glow 2s ease-in-out infinite'
+				'float': 'float 3s ease-in-out infinite'
 			}
 		}
 	},
