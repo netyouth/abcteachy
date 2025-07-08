@@ -2,22 +2,25 @@
 
 import React, { useState, useEffect } from 'react'
 import Index from "@/pages/Index"
-import LoadingSpinner from "@/components/LoadingSpinner"
+import { ABCTeachyLoader } from "@/components/ABCTeachyLoader"
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Cohesive storytelling timeline
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 6000); // 6 seconds for complete narrative
-
-    return () => clearTimeout(timer);
-  }, []);
+  const handleLoadingComplete = () => {
+    setIsLoading(false);
+  };
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <ABCTeachyLoader
+        loading={isLoading}
+        onComplete={handleLoadingComplete}
+        duration={1000}
+        autoComplete={true}
+        autoCompleteDelay={7000}
+      />
+    );
   }
 
   return <Index />;
