@@ -1,7 +1,5 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, BookOpen, Users } from "lucide-react";
 import BookingForm from "./BookingForm";
 
 const HeroSection = () => {
@@ -40,64 +38,14 @@ const HeroSection = () => {
             </Button>
           </div>
           
-          {/* Right Content - Video Card or Form */}
+          {/* Right Content - Booking Form */}
+          {showBookingForm && (
           <div className="relative flex justify-center lg:justify-end mt-8 lg:mt-0">
             <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg">
-              {!showBookingForm ? (
-                // Video Card
-                <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border border-gray-100 relative overflow-hidden backdrop-blur-sm">
-                  <div className="aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 shadow-inner">
-                    <video
-                      className="w-full h-full object-cover"
-                      autoPlay
-                      loop
-                      playsInline
-                      controls={false}
-                    >
-                      <source 
-                        src="https://orwybezmxvlgenhvwqhj.supabase.co/storage/v1/object/public/teachies//Teachy%20Cat%20Supabase%20Video.mp4" 
-                        type="video/mp4" 
-                      />
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
-                  
-                  {/* Video Card Footer */}
-                  <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                        Interactive Learning
-                      </h3>
-                      <div className="flex space-x-1 sm:space-x-2">
-                        <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
-                          <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
-                        </div>
-                        <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
-                          <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
-                        </div>
-                        <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
-                          <Users className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                      Experience personalized English learning with our AI-powered tutoring system.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                // Booking form
                 <BookingForm onClose={handleCloseForm} />
-              )}
-              
-              {/* Floating mascot - only show on larger screens and when form is not visible */}
-              {!showBookingForm && (
-                <div className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 w-12 h-12 sm:w-16 sm:h-16 bg-coral rounded-full flex items-center justify-center animate-float shadow-lg transition-transform hover:scale-110 hidden sm:flex">
-                  <span className="text-lg sm:text-2xl">📚</span>
                 </div>
-              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>

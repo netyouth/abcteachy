@@ -1,89 +1,280 @@
-
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
+import { BookOpen, MessageCircle, Users } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const FeaturedTeachersSection = () => {
-  const teachers = [
-    {
-      name: "Sarah Johnson",
-      specialty: "Business English",
-      rating: 4.9,
-      description: "Friendly tutor specializing in professional communication and presentation skills.",
-      availability: "Available today",
-      avatar: "👩‍🏫"
-    },
-    {
-      name: "Michael Chen",
-      specialty: "Conversation Practice",
-      rating: 4.8,
-      description: "Patient teacher focused on building confidence through natural conversation.",
-      availability: "Next available: Tomorrow",
-      avatar: "👨‍🏫"
-    },
-    {
-      name: "Emma Rodriguez",
-      specialty: "Grammar & Writing",
-      rating: 5.0,
-      description: "Experienced educator helping students master English grammar and writing.",
-      availability: "Available now",
-      avatar: "👩‍💼"
-    },
-    {
-      name: "David Thompson",
-      specialty: "Pronunciation",
-      rating: 4.9,
-      description: "Native speaker specializing in accent reduction and clear pronunciation.",
-      availability: "Available today",
-      avatar: "👨‍💼"
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const secondVideoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<'cat' | 'nicko'>('cat'); // Track which video is active
+
+  // Initialize videos as muted
+  useEffect(() => {
+    const video = videoRef.current;
+    const secondVideo = secondVideoRef.current;
+    
+    if (video && secondVideo) {
+      video.muted = true;
+      secondVideo.muted = true;
     }
-  ];
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const secondVideo = secondVideoRef.current;
+    
+    if (!video || !secondVideo) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Enable sound and play the active video when in view
+            if (activeVideo === 'cat') {
+              video.muted = false; // Enable sound on scroll
+              video.play().catch((error) => {
+                console.log("Autoplay failed:", error);
+              });
+              secondVideo.pause();
+              secondVideo.muted = true; // Keep inactive video muted
+            } else {
+              secondVideo.muted = false; // Enable sound on scroll
+              secondVideo.play().catch((error) => {
+                console.log("Autoplay failed:", error);
+              });
+              video.pause();
+              video.muted = true; // Keep inactive video muted
+            }
+          } else {
+            // Pause and mute both videos when out of view
+            video.pause();
+            video.muted = true;
+            secondVideo.pause();
+            secondVideo.muted = true;
+          }
+        });
+      },
+      {
+        threshold: 0.5,
+        rootMargin: "0px 0px -100px 0px"
+      }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeVideo]);
+
+  // Handle video switching
+  const handleVideoSwitch = (videoType: 'cat' | 'nicko') => {
+    const video = videoRef.current;
+    const secondVideo = secondVideoRef.current;
+    
+    if (!video || !secondVideo) return;
+
+    setActiveVideo(videoType);
+    
+    if (videoType === 'cat') {
+      secondVideo.pause();
+      secondVideo.muted = true; // Mute the inactive video
+      video.muted = false; // Unmute the active video
+      video.play().catch((error) => {
+        console.log("Play failed:", error);
+      });
+    } else {
+      video.pause();
+      video.muted = true; // Mute the inactive video
+      secondVideo.muted = false; // Unmute the active video
+      secondVideo.play().catch((error) => {
+        console.log("Play failed:", error);
+      });
+    }
+  };
+
+  // SPYLT-style scroll animations
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px"
+      }
+    );
+
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return (
-    <section className="w-full bg-white py-12 sm:py-16 md:py-20">
+    <section ref={sectionRef} className="w-full bg-white py-12 sm:py-16 md:py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
+          <div className="inline-flex items-center px-4 py-2 bg-coral/10 rounded-full mb-4">
+            <span className="text-coral font-medium text-sm">Meet the Teachies</span>
+          </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Meet Our Featured Teachers
+            Meet Our Featured Teachies
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Learn from qualified, friendly tutors who are passionate about helping you succeed
+            Learn from our fun, AI-powered Teachies who make English learning engaging and effective
           </p>
         </div>
         
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-          {teachers.map((teacher, index) => (
-            <div key={index} className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:border-coral/20">
-              <div className="text-center mb-4">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-coral-light rounded-full flex items-center justify-center mx-auto mb-3 transition-transform hover:scale-110">
-                  <span className="text-2xl sm:text-3xl">{teacher.avatar}</span>
+        {/* Video Cards Section - SPYLT-style slide in from both sides */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-6 sm:gap-8">
+          {/* First Video Card - Meet Teachy Cat (plays first) */}
+          <div 
+            className={`bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border-2 relative overflow-hidden backdrop-blur-sm max-w-md transition-all duration-1000 ease-out transform cursor-pointer hover:scale-105 ${
+              isVisible 
+                ? 'translate-x-0 opacity-100 scale-100' 
+                : '-translate-x-full opacity-0 scale-95'
+            } ${
+              activeVideo === 'cat' 
+                ? 'border-coral shadow-coral/20' 
+                : 'border-gray-100 hover:border-coral/50'
+            }`}
+            onClick={() => handleVideoSwitch('cat')}
+          >
+            <div className="aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 shadow-inner">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                loop
+                playsInline
+                controls={false}
+              >
+                <source 
+                  src="https://orwybezmxvlgenhvwqhj.storage.supabase.co/v1/object/public/teachies//Teachy%20Cat.mp4" 
+                  type="video/mp4" 
+                />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            
+            {/* Video Card Footer */}
+            <div className="mt-3 sm:mt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                  Meet Teachy Cat
+                </h3>
+                <div className="flex space-x-1 sm:space-x-2">
+                  <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
+                    <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
+                  </div>
+                  <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
+                    <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
+                  </div>
+                  <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
+                  </div>
                 </div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{teacher.name}</h3>
-                <p className="text-coral font-medium text-sm sm:text-base">{teacher.specialty}</p>
               </div>
-              
-              <div className="flex items-center justify-center mb-3">
-                <div className="flex items-center space-x-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm font-medium">{teacher.rating}</span>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                Experience fun and interactive English learning with our AI-powered Teachy Cat.
+              </p>
+              {activeVideo === 'cat' && (
+                <div className="flex items-center justify-center">
+                  <div className="w-2 h-2 bg-coral rounded-full animate-pulse"></div>
+                  <span className="ml-2 text-xs text-coral font-medium">Now Playing</span>
                 </div>
-              </div>
-              
-              <p className="text-gray-600 text-xs sm:text-sm mb-4 text-center leading-relaxed">
-                {teacher.description}
-              </p>
-              
-              <p className="text-xs text-gray-500 text-center mb-4">
-                {teacher.availability}
-              </p>
-              
+              )}
+              {/* Book Lesson Button */}
               <Button 
                 className="w-full bg-coral hover:bg-coral/90 text-white transition-all duration-200 hover:shadow-md"
                 size="sm"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent video switching when clicking button
+                }}
               >
-                Book Lesson
+                Book Lesson with Teachy Cat
               </Button>
             </div>
-          ))}
+          </div>
+
+          {/* Second Video Card - Meet Teachy Nicko (click to play) */}
+          <div 
+            className={`bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border-2 relative overflow-hidden backdrop-blur-sm max-w-md transition-all duration-1000 ease-out transform cursor-pointer hover:scale-105 ${
+              isVisible 
+                ? 'translate-x-0 opacity-100 scale-100' 
+                : 'translate-x-full opacity-0 scale-95'
+            } ${
+              activeVideo === 'nicko' 
+                ? 'border-coral shadow-coral/20' 
+                : 'border-gray-100 hover:border-coral/50'
+            }`} 
+            style={{ transitionDelay: '200ms' }}
+            onClick={() => handleVideoSwitch('nicko')}
+          >
+            <div className="aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 shadow-inner">
+              <video
+                ref={secondVideoRef}
+                className="w-full h-full object-cover"
+                loop
+                playsInline
+                controls={false}
+              >
+                <source 
+                  src="https://orwybezmxvlgenhvwqhj.storage.supabase.co/v1/object/public/teachies//Teachy%20Nicko.mp4" 
+                  type="video/mp4" 
+                />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            
+            {/* Video Card Footer */}
+            <div className="mt-3 sm:mt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                  Meet Teachy Nicko
+                </h3>
+                <div className="flex space-x-1 sm:space-x-2">
+                  <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
+                    <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
+                  </div>
+                  <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
+                    <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
+                  </div>
+                  <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 text-coral" />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                Discover engaging conversations and personalized lessons with Teachy Nicko.
+              </p>
+              {activeVideo === 'nicko' && (
+                <div className="flex items-center justify-center">
+                  <div className="w-2 h-2 bg-coral rounded-full animate-pulse"></div>
+                  <span className="ml-2 text-xs text-coral font-medium">Now Playing</span>
+                </div>
+              )}
+              {/* Book Lesson Button */}
+              <Button 
+                className="w-full bg-coral hover:bg-coral/90 text-white transition-all duration-200 hover:shadow-md"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent video switching when clicking button
+                }}
+              >
+                Book Lesson with Teachy Nicko
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
