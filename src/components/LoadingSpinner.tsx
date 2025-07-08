@@ -53,7 +53,7 @@ const LoadingSpinner = () => {
         <div className={`transition-all duration-800 ease-out ${
           currentPhase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}>
-          <span className="text-4xl font-open-sans font-bold text-gray-800 tracking-wide">
+          <span className="text-4xl font-duolingo font-bold text-gray-800 tracking-wide">
             ANYONE CAN
           </span>
         </div>
@@ -64,13 +64,13 @@ const LoadingSpinner = () => {
         }`}>
           <div className="relative h-16 flex items-center justify-center">
             {currentPhase === 4 ? (
-                          <span className="text-5xl font-nunito font-black text-coral tracking-wide">
+                          <span className="text-5xl font-duolingo font-black text-coral tracking-wide">
               ABC TEACHY
             </span>
             ) : (
               <span 
                 key={dynamicWords[currentWord]}
-                className="text-5xl font-nunito font-black text-coral tracking-wide transition-opacity duration-300 ease-in-out"
+                className="text-5xl font-duolingo font-black text-coral tracking-wide transition-opacity duration-300 ease-in-out"
               >
                 {dynamicWords[currentWord]}
               </span>
@@ -82,7 +82,7 @@ const LoadingSpinner = () => {
         <div className={`transition-all duration-800 ease-out delay-300 ${
           currentPhase >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}>
-          <span className="text-2xl font-open-sans font-semibold text-gray-700 tracking-wide">
+          <span className="text-2xl font-duolingo font-semibold text-gray-700 tracking-wide">
             WITH THE RIGHT TEACHER
           </span>
         </div>

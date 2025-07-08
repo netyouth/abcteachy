@@ -100,7 +100,7 @@ const HowItWorksSection = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
-            {steps.map((step, index) => (
+          {steps.map((step, index) => (
               <div 
                 key={index} 
                 className={`relative transition-all duration-700 ease-out ${
@@ -116,9 +116,9 @@ const HowItWorksSection = () => {
                   <div className="absolute -top-4 -left-4">
                     <div className={`w-8 h-8 ${step.color} rounded-full flex items-center justify-center shadow-lg`}>
                       <span className="text-white font-bold text-sm">{step.number}</span>
-                    </div>
-                  </div>
-
+                </div>
+              </div>
+              
                   {/* Icon */}
                   <div className={`w-16 h-16 sm:w-20 sm:h-20 ${step.lightColor} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
                     <step.icon className={`w-8 h-8 sm:w-10 sm:h-10 ${step.textColor}`} />
@@ -127,12 +127,12 @@ const HowItWorksSection = () => {
                   {/* Content */}
                   <div className="text-center">
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
-                      {step.title}
-                    </h3>
+                {step.title}
+              </h3>
                     <p className="text-gray-600 leading-relaxed mb-6">
-                      {step.description}
-                    </p>
-
+                {step.description}
+              </p>
+              
                     {/* Action Indicator */}
                     <div className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <span className={`text-sm font-medium ${step.textColor} flex items-center`}>
@@ -151,10 +151,10 @@ const HowItWorksSection = () => {
                 {index < steps.length - 1 && (
                   <div className="lg:hidden flex justify-center mt-6 mb-2">
                     <div className="w-0.5 h-8 bg-gradient-to-b from-gray-300 to-transparent"></div>
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              )}
+            </div>
+          ))}
           </div>
         </div>
 

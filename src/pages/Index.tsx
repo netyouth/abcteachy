@@ -5,10 +5,12 @@ import ForStudentsSection from "@/components/ForStudentsSection";
 import ForTeachersSection from "@/components/ForTeachersSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import Footer from "@/components/Footer";
+import TestBeams from "@/components/test-beams";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative">
+      <TestBeams />
       <Header />
       <HeroSection />
       <FeaturedTeachersSection />

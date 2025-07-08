@@ -110,7 +110,7 @@ const FeaturedTeachersSection = () => {
       {
         threshold: 0.1,
         rootMargin: "0px 0px -50px 0px"
-      }
+    }
     );
 
     observer.observe(section);
@@ -121,7 +121,7 @@ const FeaturedTeachersSection = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="w-full bg-white py-12 sm:py-16 md:py-20 overflow-hidden">
+    <section ref={sectionRef} className="w-full bg-white py-8 sm:py-12 md:py-16 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-coral/10 rounded-full mb-4">
@@ -234,8 +234,8 @@ const FeaturedTeachersSection = () => {
                 />
                 Your browser does not support the video tag.
               </video>
-            </div>
-            
+              </div>
+              
             {/* Video Card Footer */}
             <div className="mt-3 sm:mt-4 space-y-3">
               <div className="flex items-center justify-between">

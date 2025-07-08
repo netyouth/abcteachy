@@ -76,8 +76,8 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
         <div className="w-16 h-16 bg-coral rounded-full flex items-center justify-center mx-auto mb-4">
           <span className="text-white text-2xl">👩‍🏫</span>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Book Your Tutor</h2>
-        <p className="text-gray-600">Let's find you the perfect English tutor!</p>
+        <h2 className="text-2xl font-bold font-duolingo-heading text-gray-900 mb-2">Book Your Tutor</h2>
+        <p className="text-gray-600 font-duolingo-body">Let's find you the perfect English tutor!</p>
       </div>
 
       {/* Form */}
@@ -89,7 +89,7 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
             placeholder="Your full name"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className="pl-10 h-12 border-2 border-gray-200 focus:border-coral rounded-xl"
+            className="pl-10 h-12 border-2 border-gray-200 focus:border-coral rounded-xl font-duolingo-body"
             required
           />
         </div>
@@ -101,7 +101,7 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
             placeholder="Your email address"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className="pl-10 h-12 border-2 border-gray-200 focus:border-coral rounded-xl"
+            className="pl-10 h-12 border-2 border-gray-200 focus:border-coral rounded-xl font-duolingo-body"
             required
           />
         </div>
@@ -112,14 +112,14 @@ const BookingForm = ({ onClose }: BookingFormProps) => {
             placeholder="Tell us about your English learning goals (optional)"
             value={formData.message}
             onChange={(e) => handleInputChange('message', e.target.value)}
-            className="pl-10 pt-4 min-h-[100px] border-2 border-gray-200 focus:border-coral rounded-xl resize-none"
+            className="pl-10 pt-4 min-h-[100px] border-2 border-gray-200 focus:border-coral rounded-xl resize-none font-duolingo-body"
           />
         </div>
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-coral hover:bg-coral/90 text-white h-12 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none"
+          className="w-full bg-coral hover:bg-coral/90 text-white h-12 rounded-xl font-semibold font-duolingo-body text-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none"
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-2">
