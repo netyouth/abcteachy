@@ -75,9 +75,11 @@ export const BackgroundBeamsWithCollision = ({
       )}
     >
       {beams.map((beam) => (
-        <BeamAnimation
+        <CollisionMechanism
           key={beam.initialX + "beam-idx"}
           beamOptions={beam}
+          containerRef={containerRef}
+          parentRef={parentRef}
         />
       ))}
 
@@ -94,9 +96,11 @@ export const BackgroundBeamsWithCollision = ({
   );
 };
 
-const BeamAnimation = React.forwardRef<
+const CollisionMechanism = React.forwardRef<
   HTMLDivElement,
   {
+    containerRef: React.RefObject<HTMLDivElement>;
+    parentRef: React.RefObject<HTMLDivElement>;
     beamOptions?: {
       initialX?: number;
       translateX?: number;
@@ -109,48 +113,150 @@ const BeamAnimation = React.forwardRef<
       repeatDelay?: number;
     };
   }
->(({ beamOptions = {} }, ref) => {
+>(({ parentRef, containerRef, beamOptions = {} }, ref) => {
+  const beamRef = useRef<HTMLDivElement>(null);
+  const [collision, setCollision] = useState<{
+    detected: boolean;
+    coordinates: { x: number; y: number } | null;
+  }>({
+    detected: false,
+    coordinates: null,
+  });
   const [beamKey, setBeamKey] = useState(0);
+  const [cycleCollisionDetected, setCycleCollisionDetected] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBeamKey((prevKey) => prevKey + 1);
-    }, (beamOptions.duration || 8) * 1000 + (beamOptions.repeatDelay || 0) * 1000);
+    const checkCollision = () => {
+      if (
+        beamRef.current &&
+        containerRef.current &&
+        parentRef.current &&
+        !cycleCollisionDetected
+      ) {
+        const beamRect = beamRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const parentRect = parentRef.current.getBoundingClientRect();
 
-    return () => clearInterval(interval);
-  }, [beamOptions.duration, beamOptions.repeatDelay]);
+        if (beamRect.bottom >= containerRect.top) {
+          const relativeX =
+            beamRect.left - parentRect.left + beamRect.width / 2;
+          const relativeY = beamRect.bottom - parentRect.top;
+
+          setCollision({
+            detected: true,
+            coordinates: {
+              x: relativeX,
+              y: relativeY,
+            },
+          });
+          setCycleCollisionDetected(true);
+        }
+      }
+    };
+
+    const animationInterval = setInterval(checkCollision, 50);
+
+    return () => clearInterval(animationInterval);
+  }, [cycleCollisionDetected, containerRef]);
+
+  useEffect(() => {
+    if (collision.detected && collision.coordinates) {
+      setTimeout(() => {
+        setCollision({ detected: false, coordinates: null });
+        setCycleCollisionDetected(false);
+      }, 2000);
+
+      setTimeout(() => {
+        setBeamKey((prevKey) => prevKey + 1);
+      }, 2000);
+    }
+  }, [collision]);
 
   return (
-    <motion.div
-      key={beamKey}
-      ref={ref}
-      animate="animate"
-      initial={{
-        translateY: beamOptions.initialY || "-200px",
-        translateX: beamOptions.initialX || "0px",
-        rotate: beamOptions.rotate || 0,
-      }}
-      variants={{
-        animate: {
-          translateY: beamOptions.translateY || "1800px",
-          translateX: beamOptions.translateX || "0px",
+    <>
+      <motion.div
+        key={beamKey}
+        ref={beamRef}
+        animate="animate"
+        initial={{
+          translateY: beamOptions.initialY || "-200px",
+          translateX: beamOptions.initialX || "0px",
           rotate: beamOptions.rotate || 0,
-        },
-      }}
-      transition={{
-        duration: beamOptions.duration || 8,
-        repeat: Infinity,
-        repeatType: "loop",
-        ease: "linear",
-        delay: beamOptions.delay || 0,
-        repeatDelay: beamOptions.repeatDelay || 0,
-      }}
-      className={cn(
-        "absolute left-0 top-20 m-auto h-14 w-px rounded-full bg-gradient-to-t from-coral via-orange-400 to-transparent",
-        beamOptions.className
-      )}
-    />
+        }}
+        variants={{
+          animate: {
+            translateY: beamOptions.translateY || "1800px",
+            translateX: beamOptions.translateX || "0px",
+            rotate: beamOptions.rotate || 0,
+          },
+        }}
+        transition={{
+          duration: beamOptions.duration || 8,
+          repeat: Infinity,
+          repeatType: "loop",
+          ease: "linear",
+          delay: beamOptions.delay || 0,
+          repeatDelay: beamOptions.repeatDelay || 0,
+        }}
+        className={cn(
+          "absolute left-0 top-20 m-auto h-14 w-px rounded-full bg-gradient-to-t from-coral via-orange-400 to-transparent",
+          beamOptions.className
+        )}
+      />
+      <AnimatePresence>
+        {collision.detected && collision.coordinates && (
+          <Explosion
+            key={`${collision.coordinates.x}-${collision.coordinates.y}`}
+            className=""
+            style={{
+              left: `${collision.coordinates.x}px`,
+              top: `${collision.coordinates.y}px`,
+              transform: "translate(-50%, -50%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 });
 
-BeamAnimation.displayName = "BeamAnimation"; 
+CollisionMechanism.displayName = "CollisionMechanism";
+
+const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
+  const letters = ['A', 'B', 'C'];
+  const spans = Array.from({ length: 3 }, (_, index) => ({
+    id: index,
+    letter: letters[index],
+    initialX: 0,
+    initialY: 0,
+    directionX: Math.floor(Math.random() * 120 - 60),
+    directionY: Math.floor(Math.random() * -80 - 20),
+  }));
+
+  return (
+    <div {...props} className={cn("absolute z-50 h-4 w-4", props.className)}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 3, ease: "easeOut" }}
+        className="absolute -inset-x-16 top-0 m-auto h-4 w-16 rounded-full bg-gradient-to-r from-transparent via-coral to-transparent blur-sm"
+      ></motion.div>
+      {spans.map((span) => (
+        <motion.span
+          key={span.id}
+          initial={{ x: span.initialX, y: span.initialY, opacity: 1 }}
+          animate={{
+            x: span.directionX,
+            y: span.directionY,
+            opacity: 0,
+          }}
+          transition={{ duration: Math.random() * 1 + 2, ease: "easeOut" }}
+          className="absolute h-6 w-6 rounded-full bg-coral text-white text-sm font-bold flex items-center justify-center"
+        >
+          {span.letter}
+        </motion.span>
+      ))}
+    </div>
+  );
+}; 
