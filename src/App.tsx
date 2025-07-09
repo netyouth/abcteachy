@@ -34,7 +34,7 @@ function App() {
     // Simulate initial app loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 6000); // 6 seconds to show all loading states
+    }, 5000); // 5 seconds to show all 4 loading states
 
     return () => clearTimeout(timer);
   }, []);
