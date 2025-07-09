@@ -1,4 +1,4 @@
-"use client";
+
 
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -64,9 +64,9 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
     variant,
     alignment,
     spacing,
-    title = "Anyone can learn",
-    highlightedWord = "English",
-    subtitle = "ABC Teachy connects you with friendly, qualified English tutors for personalized lessons.",
+    title = "Master Cambridge",
+    highlightedWord = "English Exams",
+    subtitle = "ABC Teachy specializes in KET (A2 Key) and PET (B1 Preliminary) exam preparation with expert tutors and interactive lessons that build confidence.",
     ctaText = "Book a Tutor",
     onCtaClick,
     showBookingForm: controlledShowBookingForm,
@@ -83,15 +83,15 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
       if (onCtaClick) {
         onCtaClick();
       } else {
-        setShowBookingForm(true);
+    setShowBookingForm(true);
       }
     }, [onCtaClick, setShowBookingForm]);
 
     const handleCloseForm = React.useCallback(() => {
-      setShowBookingForm(false);
+    setShowBookingForm(false);
     }, [setShowBookingForm]);
 
-    return (
+  return (
       <section
         ref={ref}
         className={cn(heroSectionVariants({ variant, alignment }), className)}
@@ -133,12 +133,12 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
               <div className="relative w-full max-w-md">
                 <BookingForm onClose={handleCloseForm} />
-              </div>
+                </div>
             </div>
           )}
-        </div>
-      </section>
-    );
+      </div>
+    </section>
+  );
   }
 );
 

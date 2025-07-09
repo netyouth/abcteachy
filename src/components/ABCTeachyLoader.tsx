@@ -1,4 +1,4 @@
-"use client";
+
 
 import * as React from "react";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";

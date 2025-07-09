@@ -1,9 +1,9 @@
-"use client";
+
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { LogIn, Menu, X } from "lucide-react";
+import { LogIn, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavigationItem {
@@ -74,7 +74,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       </nav>
     );
 
-    return (
+  return (
       <header
         ref={ref}
         className={cn(
@@ -83,34 +83,34 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         )}
         {...props}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
             <div className="flex items-center">
-              <img 
+            <img 
                 src={logoSrc}
                 alt={logoAlt}
                 className="h-12 sm:h-14 lg:h-16 w-auto transition-transform duration-200 hover:scale-105"
-              />
-            </div>
-            
-            {/* Desktop Navigation */}
+            />
+          </div>
+          
+          {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
               <NavigationLinks />
               
               {showAuthButton && (
-                <Button
-                  variant="outline"
-                  size="sm"
+            <Button 
+              variant="outline" 
+              size="sm"
                   onClick={onAuthClick}
                   className="flex items-center space-x-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
+            >
                   <LogIn className="w-4 h-4" />
                   <span>Sign In</span>
-                </Button>
+            </Button>
               )}
-            </div>
-            
+          </div>
+
             {/* Mobile Menu */}
             <div className="md:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -133,23 +133,23 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                     <NavigationLinks isMobile />
                     
                     {showAuthButton && (
-                      <Button
-                        variant="outline"
+              <Button 
+                variant="outline" 
                         onClick={onAuthClick}
                         className="flex items-center justify-center space-x-2 w-full mt-6"
-                      >
+              >
                         <LogIn className="w-4 h-4" />
                         <span>Sign In</span>
-                      </Button>
+              </Button>
                     )}
                   </div>
                 </SheetContent>
               </Sheet>
             </div>
           </div>
-        </div>
-      </header>
-    );
+      </div>
+    </header>
+  );
   }
 );
 

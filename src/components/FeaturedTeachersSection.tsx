@@ -125,13 +125,13 @@ const FeaturedTeachersSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-coral/10 rounded-full mb-4">
-            <span className="text-coral font-medium text-sm">Meet the Teachies</span>
+            <span className="text-coral font-medium text-sm">Cambridge Specialists</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Meet Our Featured Teachies
+            Meet Our Cambridge Experts
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Learn from our fun, AI-powered Teachies who make English learning engaging and effective
+            Learn from our AI-powered Cambridge specialists who make KET, PET, and YLE exam preparation fun and effective
           </p>
         </div>
         
@@ -170,7 +170,7 @@ const FeaturedTeachersSection = () => {
             <div className="mt-3 sm:mt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                  Meet Teachy Cat
+                  Teachy Cat - KET Expert
                 </h3>
                 <div className="flex space-x-1 sm:space-x-2">
                   <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
@@ -185,7 +185,7 @@ const FeaturedTeachersSection = () => {
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Experience fun and interactive English learning with our AI-powered Teachy Cat.
+                Master KET (A2 Key) and YLE with interactive lessons, practice tests, and speaking simulations.
               </p>
               {activeVideo === 'cat' && (
                 <div className="flex items-center justify-center">
@@ -201,7 +201,7 @@ const FeaturedTeachersSection = () => {
                   e.stopPropagation(); // Prevent video switching when clicking button
                 }}
               >
-                Book Lesson with Teachy Cat
+                Start KET Prep with Cat
               </Button>
             </div>
           </div>
@@ -240,7 +240,7 @@ const FeaturedTeachersSection = () => {
             <div className="mt-3 sm:mt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                  Meet Teachy Nicko
+                  Teachy Nicko - PET Expert
                 </h3>
                 <div className="flex space-x-1 sm:space-x-2">
                   <div className="bg-coral-light rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-colors hover:bg-coral/20">
@@ -255,7 +255,7 @@ const FeaturedTeachersSection = () => {
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Discover engaging conversations and personalized lessons with Teachy Nicko.
+                Excel at PET (B1 Preliminary) with advanced speaking practice and real Cambridge exam formats.
               </p>
               {activeVideo === 'nicko' && (
                 <div className="flex items-center justify-center">
@@ -271,7 +271,7 @@ const FeaturedTeachersSection = () => {
                   e.stopPropagation(); // Prevent video switching when clicking button
                 }}
               >
-                Book Lesson with Teachy Nicko
+                Start PET Prep with Nicko
               </Button>
             </div>
           </div>
