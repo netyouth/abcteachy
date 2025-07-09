@@ -19,43 +19,37 @@ export default {
     	},
     	extend: {
     		fontFamily: {
-    			inter: [
-    				'Inter',
-    				'sans-serif'
-    			],
-    			'open-sans': [
-    				'Open Sans',
-    				'sans-serif'
-    			],
-    			nunito: [
-    				'Nunito',
-    				'sans-serif'
-    			],
-    			duolingo: [
-    				'DM Sans',
-    				'Work Sans',
-    				'Nunito',
+    			'duolingo-heading': [
+    				'Rubik',
+    				'Nunito Sans',
     				'-apple-system',
     				'BlinkMacSystemFont',
     				'Segoe UI',
-    				'Roboto',
-    				'Helvetica',
-    				'Arial',
-    				'sans-serif'
-    			],
-    			'duolingo-heading': [
-    				'Nunito',
-    				'Poppins',
-    				'DM Sans',
     				'system-ui',
     				'sans-serif'
     			],
     			'duolingo-body': [
-    				'DM Sans',
-    				'Work Sans',
-    				'system-ui',
+    				'Nunito Sans',
     				'-apple-system',
     				'BlinkMacSystemFont',
+    				'Segoe UI',
+    				'system-ui',
+    				'sans-serif'
+    			],
+    			'duolingo-bold': [
+    				'Nunito Sans',
+    				'-apple-system',
+    				'BlinkMacSystemFont',
+    				'Segoe UI',
+    				'system-ui',
+    				'sans-serif'
+    			],
+    			'duolingo-ui': [
+    				'Nunito Sans',
+    				'-apple-system',
+    				'BlinkMacSystemFont',
+    				'Segoe UI',
+    				'system-ui',
     				'sans-serif'
     			]
     		},

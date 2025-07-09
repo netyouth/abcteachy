@@ -98,10 +98,10 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
         {...props}
       >
         <div className={cn(heroContentVariants({ spacing }))}>
-          <div className="flex flex-col items-center text-center bg-transparent">
+          <div className="flex flex-col items-center text-center bg-transparent space-y-10 sm:space-y-12">
             {/* Main Content */}
             <div className="space-y-6 sm:space-y-8 bg-transparent">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold font-duolingo-heading text-foreground leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-duolingo-heading text-foreground leading-tight">
                 {title}{" "}
                 <PointerHighlight containerClassName="align-baseline">
                   <span className="text-coral">{highlightedWord}</span>
@@ -119,7 +119,7 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
               size="lg" 
               className={cn(
                 "bg-coral hover:bg-coral/90 text-white px-8 sm:px-12 py-4 sm:py-6",
-                "text-lg sm:text-xl font-semibold font-duolingo-body rounded-full",
+                "text-lg sm:text-xl font-duolingo-bold rounded-full",
                 "shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105",
                 "focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2"
               )}

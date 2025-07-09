@@ -63,7 +63,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
             key={item.href}
             onClick={() => handleNavigationClick(item.href, item.external)}
             className={cn(
-              "text-muted-foreground hover:text-primary font-medium font-duolingo-body transition-colors duration-200",
+              "text-muted-foreground hover:text-primary font-duolingo-ui transition-colors duration-200",
               "text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1",
               isMobile && "text-base w-full text-left py-2"
             )}

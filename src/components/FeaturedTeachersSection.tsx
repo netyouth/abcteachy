@@ -121,16 +121,16 @@ const FeaturedTeachersSection = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="w-full bg-white py-12 sm:py-16 md:py-20 overflow-hidden">
+    <section ref={sectionRef} className="w-full bg-white pb-8 sm:pb-12 md:pb-16 overflow-hidden">
       <div className="w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12 sm:mb-16">
-          <div className="inline-flex items-center px-4 py-2 bg-coral/10 rounded-full mb-4">
+          <div className="inline-flex items-center px-4 py-2 bg-coral/10 rounded-full mb-6">
             <span className="text-coral font-medium text-sm">Cambridge Specialists</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <h2 className="text-3xl sm:text-4xl font-duolingo-heading text-gray-900 mb-3 sm:mb-4">
             Meet Our Cambridge Experts
           </h2>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl font-duolingo-body text-gray-600 max-w-2xl mx-auto leading-relaxed">
             Learn from our AI-powered Cambridge specialists who make KET, PET, and YLE exam preparation fun and effective
           </p>
         </div>
