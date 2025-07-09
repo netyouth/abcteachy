@@ -101,7 +101,7 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
           <div className="flex flex-col items-center text-center bg-transparent">
             {/* Main Content */}
             <div className="space-y-6 sm:space-y-8 bg-transparent">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold font-duolingo-heading text-foreground leading-tight sm:whitespace-nowrap">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold font-duolingo-heading text-foreground leading-tight">
                 {title}{" "}
                 <PointerHighlight containerClassName="align-baseline">
                   <span className="text-coral">{highlightedWord}</span>

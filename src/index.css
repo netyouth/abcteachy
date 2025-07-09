@@ -127,19 +127,35 @@ All colors MUST be HSL.
     width: 100%;
     height: 100%;
     overflow-x: hidden;
+    max-width: 100vw;
   }
 
   #root {
     width: 100%;
     min-height: 100vh;
     position: relative;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  /* Prevent horizontal scroll issues */
+  * {
+    box-sizing: border-box;
+  }
+  
+  /* Fix for containers that might overflow */
+  .container {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   /* Prevent scrolling when loader is active */
   body.loading-active {
     overflow: hidden;
     position: fixed;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
   }
 }

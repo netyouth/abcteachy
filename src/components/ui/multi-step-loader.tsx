@@ -47,7 +47,7 @@ const LoaderCore = ({
   value?: number;
 }) => {
   return (
-    <div className="flex relative justify-start max-w-xl mx-auto flex-col mt-40">
+    <div className="flex relative justify-center items-center max-w-2xl mx-auto flex-col px-4">
       {loadingStates.map((loadingState, index) => {
         const distance = Math.abs(index - value);
         const opacity = Math.max(1 - distance * 0.2, 0); // Minimum opacity is 0, keep it 0.2 if you're sane.
@@ -55,9 +55,9 @@ const LoaderCore = ({
         return (
           <motion.div
             key={index}
-            className={cn("text-left flex gap-2 mb-4")}
-            initial={{ opacity: 0, y: -(value * 40) }}
-            animate={{ opacity: opacity, y: -(value * 40) }}
+            className={cn("text-left flex gap-3 mb-6 w-full")}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: opacity, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <div>
@@ -76,7 +76,7 @@ const LoaderCore = ({
             </div>
             <span
               className={cn(
-                "text-foreground font-duolingo-body",
+                "text-foreground font-duolingo-body text-lg leading-relaxed",
                 value === index && "text-coral opacity-100 font-semibold"
               )}
             >
@@ -133,7 +133,7 @@ export const MultiStepLoader = ({
           exit={{
             opacity: 0,
           }}
-          className="fixed inset-0 w-screen h-screen z-[9999] flex items-center justify-center bg-background/95 backdrop-blur-xl"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background backdrop-blur-sm"
           style={{
             width: "100vw",
             height: "100vh",
@@ -143,11 +143,11 @@ export const MultiStepLoader = ({
             bottom: 0,
           }}
         >
-          <div className="relative w-full h-full flex items-center justify-center">
+          <div className="relative flex items-center justify-center w-full h-full">
             <LoaderCore value={currentState} loadingStates={loadingStates} />
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-br from-coral/5 via-background to-coral/10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-coral/10 via-transparent to-coral/5 pointer-events-none" />
         </motion.div>
       )}
     </AnimatePresence>

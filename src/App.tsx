@@ -14,15 +14,17 @@ import './App.css'
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative w-full overflow-x-hidden">
       <BackgroundBeamsWrapper intensity="medium" position="top" />
-      <Header />
-      <HeroSection />
-      <FeaturedTeachersSection />
-      <ForStudentsSection />
-      <ForTeachersSection />
-      <HowItWorksSection />
-      <Footer />
+      <div className="w-full max-w-[100vw]">
+        <Header />
+        <HeroSection />
+        <FeaturedTeachersSection />
+        <ForStudentsSection />
+        <ForTeachersSection />
+        <HowItWorksSection />
+        <Footer />
+      </div>
     </div>
   );
 };
