@@ -59,12 +59,12 @@ const ForTeachersSection = React.forwardRef<HTMLElement, ForTeachersSectionProps
         ref={ref}
         id="teachers"
         className={cn(
-          "w-full bg-coral/5 py-16 sm:py-20 md:py-24",
+          "w-full bg-coral/5 py-12 sm:py-16 md:py-20",
           className
         )}
         {...props}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Content */}
           <div className="space-y-8">

@@ -73,8 +73,8 @@ const HowItWorksSection = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} id="how-it-works" className="w-full bg-gradient-to-br from-gray-50 via-white to-blue-50 py-16 sm:py-20 md:py-24 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} id="how-it-works" className="w-full bg-gradient-to-br from-gray-50 via-white to-blue-50 py-12 sm:py-16 md:py-20 overflow-hidden">
+      <div className="w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className={`text-center mb-12 sm:mb-16 transition-all duration-1000 ease-out ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'

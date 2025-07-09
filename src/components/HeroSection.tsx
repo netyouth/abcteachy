@@ -8,7 +8,7 @@ import { PointerHighlight } from "./ui/pointer-highlight";
 import { cn } from "@/lib/utils";
 
 const heroSectionVariants = cva(
-  "w-full bg-transparent min-h-screen flex items-center justify-center relative z-20",
+  "w-full bg-transparent min-h-screen flex items-center justify-center relative z-20 m-0 p-0",
   {
     variants: {
       variant: {
@@ -30,7 +30,7 @@ const heroSectionVariants = cva(
 );
 
 const heroContentVariants = cva(
-  "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 bg-transparent",
+  "w-full px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto bg-transparent",
   {
     variants: {
       spacing: {
