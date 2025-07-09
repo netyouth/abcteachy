@@ -133,13 +133,21 @@ export const MultiStepLoader = ({
           exit={{
             opacity: 0,
           }}
-          className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-2xl"
+          className="fixed inset-0 w-screen h-screen z-[9999] flex items-center justify-center bg-background/95 backdrop-blur-xl"
+          style={{
+            width: "100vw",
+            height: "100vh",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
         >
-          <div className="h-96 relative">
+          <div className="relative w-full h-full flex items-center justify-center">
             <LoaderCore value={currentState} loadingStates={loadingStates} />
           </div>
 
-          <div className="bg-gradient-to-t inset-x-0 z-20 bottom-0 bg-background h-full absolute [mask-image:radial-gradient(900px_at_center,transparent_30%,white)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-coral/5 via-background to-coral/10 pointer-events-none" />
         </motion.div>
       )}
     </AnimatePresence>

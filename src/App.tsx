@@ -31,13 +31,24 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Add loading class to body to prevent scrolling
+    if (isLoading) {
+      document.body.classList.add('loading-active');
+    } else {
+      document.body.classList.remove('loading-active');
+    }
+
     // Simulate initial app loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 5000); // 5 seconds to show all 4 loading states
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      // Cleanup: remove loading class
+      document.body.classList.remove('loading-active');
+    };
+  }, [isLoading]);
 
   // Show loading screen on initial app load
   if (isLoading) {
