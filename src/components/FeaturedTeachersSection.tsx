@@ -128,10 +128,10 @@ const FeaturedTeachersSection = () => {
             <span className="text-coral font-medium text-sm">Cambridge Specialists</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-duolingo-heading text-gray-900 mb-3 sm:mb-4">
-            Meet Our Cambridge Experts
+            Meet Your AI-Powered English Coaches
           </h2>
           <p className="text-lg sm:text-xl font-duolingo-body text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Learn from our AI-powered Cambridge specialists who make KET, PET, and YLE exam preparation fun and effective
+            Learn from our AI specialists who make English learning engaging — from Cambridge exam prep to real-world conversations
           </p>
         </div>
         
@@ -201,7 +201,7 @@ const FeaturedTeachersSection = () => {
                   e.stopPropagation(); // Prevent video switching when clicking button
                 }}
               >
-                Start KET Prep with Cat
+                Learn with Teachy Cat
               </Button>
             </div>
           </div>
@@ -271,7 +271,7 @@ const FeaturedTeachersSection = () => {
                   e.stopPropagation(); // Prevent video switching when clicking button
                 }}
               >
-                Start PET Prep with Nicko
+                Learn with Teachy Nicko
               </Button>
             </div>
           </div>

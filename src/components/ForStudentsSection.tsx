@@ -21,26 +21,26 @@ interface ForStudentsSectionProps extends React.ComponentPropsWithoutRef<"sectio
 const defaultBenefits: Benefit[] = [
     {
       icon: Users,
-      title: "Expert Cambridge Tutors",
-    description: "Learn from tutors experienced in KET, PET, and Cambridge exam formats with proven success records.",
+      title: "Cambridge-Certified Tutors",
+    description: "Learn from qualified teachers who've helped hundreds pass KET, PET, and speak fluently in real conversations.",
     iconStyle: "coral"
     },
     {
       icon: Calendar,
-      title: "Real Practice Tests",
-    description: "Access authentic Cambridge practice materials and speaking simulations to build exam confidence.",
+      title: "Authentic Practice Materials",
+    description: "Master real Cambridge tests and practice speaking scenarios you'll actually use in work and life.",
     iconStyle: "secondary-blue"
     },
     {
       icon: DollarSign,
-      title: "Flexible Online Learning",
-    description: "Interactive lessons designed for all ages, from Young Learners English to adult certifications.",
+      title: "Fits Your Schedule & Budget",
+    description: "Affordable 1-on-1 lessons that work around your life — perfect for students and working professionals.",
     iconStyle: "secondary-green"
     },
     {
       icon: TrendingUp,
-      title: "Proven Results",
-    description: "Track your progress with detailed feedback and targeted exam preparation strategies.",
+      title: "See Real Progress Fast",
+    description: "Track improvements with personalized feedback and celebrate milestones in your English journey.",
     iconStyle: "coral"
     }
   ];
@@ -48,8 +48,8 @@ const defaultBenefits: Benefit[] = [
 const ForStudentsSection = React.forwardRef<HTMLElement, ForStudentsSectionProps>(
   ({
     className,
-    title = "Why Choose ABC Teachy for Cambridge Exams",
-    subtitle = "Everything you need to succeed in KET, PET, and other Cambridge English certifications",
+    title = "Why Students Love Learning with ABC Teachy",
+    subtitle = "From passing Cambridge exams to speaking confidently in real life — we help you achieve your English goals",
     benefits = defaultBenefits,
     ...props
   }, ref) => {

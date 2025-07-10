@@ -25,20 +25,20 @@ interface ForTeachersSectionProps extends React.ComponentPropsWithoutRef<"sectio
 const defaultBenefits: TeacherBenefit[] = [
     {
       icon: DollarSign,
-      title: "Premium Cambridge Rates",
-    description: "Earn higher rates teaching specialized Cambridge exam preparation courses",
+      title: "Earn $25-50+ Per Hour",
+    description: "Get paid competitive rates for 1-on-1 lessons, with bonus rates for Cambridge exam specialization",
     iconStyle: "coral"
     },
     {
       icon: Clock,
-      title: "Flexible Teaching Schedule",
-    description: "Set your own hours while helping students achieve their Cambridge certification goals",
+      title: "Complete Schedule Freedom",
+    description: "Teach when you want, from anywhere. Perfect for part-time income or full-time teaching career",
     iconStyle: "secondary-blue"
     },
     {
       icon: Heart,
-      title: "Cambridge Expert Network",
-    description: "Join our community of certified Cambridge exam specialists and share best practices",
+      title: "Make a Real Impact",
+    description: "Watch students gain confidence, pass exams, and achieve their life goals through better English",
     iconStyle: "secondary-green"
     }
   ];
@@ -46,8 +46,8 @@ const defaultBenefits: TeacherBenefit[] = [
 const ForTeachersSection = React.forwardRef<HTMLElement, ForTeachersSectionProps>(
   ({
     className,
-    title = "Teach Cambridge English with ABC Teachy",
-    subtitle = "Share your Cambridge exam expertise and help students master KET, PET, and other certifications while earning excellent income.",
+    title = "Teach English That Changes Lives",
+    subtitle = "Help students achieve their dreams — from passing Cambridge exams to speaking confidently in real-world situations. Earn great income doing what you love.",
     ctaText = "Join Our Team",
     benefits = defaultBenefits,
     onCtaClick,

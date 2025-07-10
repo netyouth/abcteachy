@@ -10,8 +10,8 @@ const HowItWorksSection = () => {
     {
       number: "1",
       icon: Search,
-      title: "Choose Your Cambridge Expert",
-      description: "Browse our Cambridge-certified tutors specializing in KET, PET, and other exam formats.",
+      title: "Find Your Perfect English Tutor",
+      description: "Choose from qualified teachers who specialize in your goals — whether Cambridge exams or conversation skills.",
       color: "bg-secondary-blue",
       lightColor: "bg-secondary-blue-light",
       textColor: "text-secondary-blue"
@@ -19,8 +19,8 @@ const HowItWorksSection = () => {
     {
       number: "2",
       icon: Calendar,
-      title: "Book Exam Prep Sessions",
-      description: "Schedule personalized Cambridge exam preparation lessons with practice tests and speaking practice.",
+      title: "Book Your First Lesson",
+      description: "Schedule a personalized session that fits your life. Tell your tutor exactly what you want to achieve.",
       color: "bg-secondary-green",
       lightColor: "bg-secondary-green-light",
       textColor: "text-secondary-green"
@@ -28,8 +28,8 @@ const HowItWorksSection = () => {
     {
       number: "3",
       icon: Play,
-      title: "Master Your Cambridge Exam",
-      description: "Build confidence with interactive lessons, real practice materials, and speaking simulations.",
+      title: "Start Speaking with Confidence",
+      description: "Practice real conversations, master exam techniques, and watch your English skills transform your life.",
       color: "bg-coral",
       lightColor: "bg-coral-light",
       textColor: "text-coral"
@@ -83,10 +83,10 @@ const HowItWorksSection = () => {
             <span className="text-coral font-medium text-sm">Simple Process</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
-            Your Cambridge Journey
+            Your English Learning Journey
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Master Cambridge English exams in three simple steps - from KET and PET to YLE for young learners
+            Transform your English in three simple steps — from exam success to real-world confidence
           </p>
         </div>
         
@@ -164,13 +164,13 @@ const HowItWorksSection = () => {
         }`} style={{ transitionDelay: '600ms' }}>
           <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xl border border-gray-100 max-w-2xl mx-auto">
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-              Ready to Master Cambridge English?
+              Ready to Transform Your English?
             </h3>
             <p className="text-gray-600 mb-6">
-              Join thousands of students who have successfully passed their Cambridge exams with ABC Teachy
+              Join thousands of students who've achieved their goals — from passing exams to speaking fluently
             </p>
             <button className="bg-coral hover:bg-coral/90 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg hover:scale-105">
-              Start Your Cambridge Prep
+              Find Your Perfect Tutor
             </button>
           </div>
         </div>

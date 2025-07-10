@@ -50,7 +50,9 @@ interface HeroSectionProps
     VariantProps<typeof heroSectionVariants> {
   title?: string;
   highlightedWord?: string;
+  tagline?: string;
   subtitle?: string;
+  features?: string[];
   ctaText?: string;
   spacing?: VariantProps<typeof heroContentVariants>["spacing"];
   onCtaClick?: () => void;
@@ -64,10 +66,12 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
     variant,
     alignment,
     spacing,
-    title = "Master Cambridge",
-    highlightedWord = "English Exams",
-    subtitle = "ABC Teachy specializes in KET (A2 Key) and PET (B1 Preliminary) exam preparation with expert tutors and interactive lessons that build confidence.",
-    ctaText = "Book a Tutor",
+    title = "Master English for Life —",
+    highlightedWord = "Not Just for Exams",
+    tagline = "Build real English skills that boost your confidence in every conversation, meeting, and opportunity.",
+    subtitle = "From Cambridge exam prep (KET & PET) to fluent everyday conversations and professional meetings — we help students and professionals achieve their English goals.",
+    features = ["1-on-1 personalized lessons", "Cambridge-certified tutors", "Learn on your schedule"],
+    ctaText = "Start Your English Journey",
     onCtaClick,
     showBookingForm: controlledShowBookingForm,
     onBookingFormToggle,
@@ -109,8 +113,24 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
               </h1>
               
               <p className="text-lg sm:text-xl font-duolingo-body text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                {tagline}
+              </p>
+              
+              <p className="text-base sm:text-lg font-duolingo-body text-muted-foreground leading-relaxed max-w-3xl mx-auto">
                 {subtitle}
               </p>
+              
+              {/* Features List */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mt-8">
+                {features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-coral rotate-45"></div>
+                    <span className="text-sm sm:text-base font-duolingo-body text-foreground font-medium">
+                      {feature}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
             
             {/* Call to Action */}

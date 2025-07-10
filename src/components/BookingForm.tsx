@@ -62,7 +62,6 @@ export interface BookingFormProps
   title?: string;
   description?: string;
   submitText?: string;
-  avatar?: string;
 }
 
 const BookingForm = React.forwardRef<HTMLDivElement, BookingFormProps>(
@@ -75,7 +74,6 @@ const BookingForm = React.forwardRef<HTMLDivElement, BookingFormProps>(
     title = "Book Your Tutor",
     description = "Let's find you the perfect English tutor!",
     submitText = "Book My Tutor",
-    avatar = "👩‍🏫",
     ...props
   }, ref) => {
     const { toast } = useToast();
@@ -149,11 +147,6 @@ const BookingForm = React.forwardRef<HTMLDivElement, BookingFormProps>(
 
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-coral rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl" role="img" aria-label="Teacher">
-              {avatar}
-            </span>
-        </div>
           <h2 className="text-2xl font-bold font-duolingo-heading text-foreground mb-2">
             {title}
           </h2>

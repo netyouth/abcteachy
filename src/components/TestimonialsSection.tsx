@@ -21,33 +21,33 @@ interface TestimonialsSectionProps extends React.ComponentPropsWithoutRef<"secti
 
 const defaultTestimonials: Testimonial[] = [
     {
-      name: "Maria Santos",
-    location: "🇧🇷 Brazil",
+      name: "Sofia Rodriguez",
+    location: "🇲🇽 Mexico",
       rating: 5,
-      quote: "ABC Teachy helped me gain confidence in speaking English. My tutor was so patient and encouraging!",
-    avatarFallback: "MS"
+      quote: "I passed my PET exam AND got promoted at work! My tutor taught me both exam skills and business English. Life-changing!",
+    avatarFallback: "SR"
     },
     {
-      name: "Hiroshi Tanaka",
-    location: "🇯🇵 Japan",
+      name: "Liam Chen",
+    location: "🇨🇳 China",
       rating: 5,
-      quote: "The flexible scheduling made it perfect for my busy work life. I improved so much in just 3 months!",
-    avatarFallback: "HT"
+      quote: "From struggling with KET to confidently presenting in English meetings. ABC Teachy gave me the tools for real success.",
+    avatarFallback: "LC"
     },
     {
-      name: "Ahmed Hassan",
-    location: "🇪🇬 Egypt",
+      name: "Priya Patel",
+    location: "🇮🇳 India",
       rating: 5,
-      quote: "My pronunciation has improved dramatically. The one-on-one lessons were exactly what I needed.",
-    avatarFallback: "AH"
+      quote: "My 12-year-old daughter loves her lessons! She's excited about English now and her confidence has soared.",
+    avatarFallback: "PP"
     }
   ];
 
 const TestimonialsSection = React.forwardRef<HTMLElement, TestimonialsSectionProps>(
   ({
     className,
-    title = "Student Success Stories",
-    subtitle = "See how ABC Teachy has helped students from around the world improve their English",
+    title = "Real Students, Real Results",
+    subtitle = "From exam success to career breakthroughs — discover how ABC Teachy transforms lives",
     testimonials = defaultTestimonials,
     ...props
   }, ref) => {
