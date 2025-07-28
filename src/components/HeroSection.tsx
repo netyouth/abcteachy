@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Button } from "@/components/ui/button";
-import BookingForm from "./BookingForm";
+// BookingForm removed - using auth system instead
 import { PointerHighlight } from "./ui/pointer-highlight";
 import { cn } from "@/lib/utils";
 
@@ -77,23 +77,12 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
     onBookingFormToggle,
     ...props
   }, ref) => {
-    const [internalShowBookingForm, setInternalShowBookingForm] = React.useState(false);
-    
-    // Use controlled state if provided, otherwise use internal state
-    const showBookingForm = controlledShowBookingForm ?? internalShowBookingForm;
-    const setShowBookingForm = onBookingFormToggle ?? setInternalShowBookingForm;
-
     const handleCtaClick = React.useCallback(() => {
       if (onCtaClick) {
         onCtaClick();
-      } else {
-    setShowBookingForm(true);
       }
-    }, [onCtaClick, setShowBookingForm]);
-
-    const handleCloseForm = React.useCallback(() => {
-    setShowBookingForm(false);
-    }, [setShowBookingForm]);
+      // Booking form functionality removed - using auth system
+    }, [onCtaClick]);
 
   return (
       <section
@@ -148,14 +137,7 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
             </Button>
           </div>
           
-          {/* Booking Form Modal */}
-          {showBookingForm && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="relative w-full max-w-md">
-                <BookingForm onClose={handleCloseForm} />
-                </div>
-            </div>
-          )}
+          {/* Booking form functionality moved to auth system */}
       </div>
     </section>
   );

@@ -1,66 +1,29 @@
-import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { HeroSection } from "@/components/HeroSection";
-import FeaturedTeachersSection from "@/components/FeaturedTeachersSection";
-import { ForStudentsSection } from "@/components/ForStudentsSection";
-import { ForTeachersSection } from "@/components/ForTeachersSection";
-import HowItWorksSection from "@/components/HowItWorksSection";
-import Footer from "@/components/Footer";
-import { BackgroundBeamsWrapper } from "@/components/test-beams";
-import { CambridgeExamLoader } from "@/components/CambridgeExamLoader";
-import { NotFound } from "@/pages/NotFound";
-import './App.css'
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Index from "./pages/Index";
+import { NotFound } from "./pages/NotFound";
 
-const HomePage = () => {
-  return (
-    <>
-      <BackgroundBeamsWrapper intensity="medium" position="top" />
-      <Header />
-      <HeroSection />
-      <FeaturedTeachersSection />
-      <ForStudentsSection />
-      <ForTeachersSection />
-      <HowItWorksSection />
-      <Footer />
-    </>
-  );
-};
+const queryClient = new QueryClient();
 
-function App() {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Add loading class to body to prevent scrolling
-    if (isLoading) {
-      document.body.classList.add('loading-active');
-    } else {
-      document.body.classList.remove('loading-active');
-    }
-
-    // Simulate initial app loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 5000); // 5 seconds to show all 4 loading states
-
-    return () => {
-      clearTimeout(timer);
-      // Cleanup: remove loading class
-      document.body.classList.remove('loading-active');
-    };
-  }, [isLoading]);
-
-  // Show loading screen on initial app load
-  if (isLoading) {
-    return <CambridgeExamLoader loading={true} duration={1200} />;
-  }
-
-  return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
 export default App; 
