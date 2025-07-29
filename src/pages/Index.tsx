@@ -13,7 +13,10 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 const Index = () => {
   const { user, loading } = useAuth();
 
+  console.log('Index component - user:', user, 'loading:', loading);
+
   if (loading) {
+    console.log('Rendering loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
@@ -23,10 +26,12 @@ const Index = () => {
 
   // If user is authenticated, show dashboard
   if (user) {
+    console.log('Rendering dashboard for user:', user.email);
     return <DashboardLayout />;
   }
 
   // Otherwise show the landing page
+  console.log('Rendering landing page');
   return (
     <div className="min-h-screen">
       <Header />
