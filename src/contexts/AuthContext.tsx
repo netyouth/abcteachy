@@ -39,13 +39,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           // Fetch user profile after auth state change
           setTimeout(async () => {
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            if (!error) {
-              setProfile(profile);
+            try {
+              const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle();
+              if (!error) {
+                setProfile(profile);
+              } else {
+                console.error('Error fetching profile:', error);
+                setProfile(null);
+              }
+            } catch (err) {
+              console.error('Profile fetch error:', err);
+              setProfile(null);
             }
           }, 0);
         } else {
@@ -63,17 +71,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         // Fetch initial profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle()
-          .then(({ data: profile, error }) => {
+        const fetchProfile = async () => {
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .maybeSingle();
             if (!error) {
               setProfile(profile);
+            } else {
+              console.error('Error fetching initial profile:', error);
+              setProfile(null);
             }
+          } catch (err) {
+            console.error('Initial profile fetch error:', err);
+            setProfile(null);
+          } finally {
             setLoading(false);
-          });
+          }
+        };
+        fetchProfile();
       } else {
         setLoading(false);
       }

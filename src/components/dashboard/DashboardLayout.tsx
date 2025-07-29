@@ -16,7 +16,15 @@ export function DashboardLayout() {
   };
 
   const renderDashboard = () => {
-    if (!profile) return null;
+    if (!profile) {
+      return (
+        <div className="p-6">
+          <div className="text-center">
+            <p>Loading your dashboard...</p>
+          </div>
+        </div>
+      );
+    }
     
     switch (profile.role) {
       case 'student':
@@ -53,9 +61,9 @@ export function DashboardLayout() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{profile?.full_name}</p>
+                    <p className="text-sm font-medium leading-none">{profile?.full_name || 'User'}</p>
                     <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                    <p className="text-xs leading-none text-muted-foreground capitalize">{profile?.role}</p>
+                    <p className="text-xs leading-none text-muted-foreground capitalize">{profile?.role || 'student'}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
