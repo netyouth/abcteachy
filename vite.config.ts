@@ -4,18 +4,18 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    host: "::",
+    port: 3000,
+  },
   plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
+  define: {
+    // Suppress React Router future flag warning
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
   },
 }) 

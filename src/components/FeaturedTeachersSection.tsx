@@ -157,9 +157,11 @@ const FeaturedTeachersSection = () => {
                 loop
                 playsInline
                 controls={false}
+                autoPlay
+                muted
               >
                 <source 
-                  src="https://orwybezmxvlgenhvwqhj.storage.supabase.co/v1/object/public/teachies//Teachy%20Cat.mp4" 
+                  src="https://objcklmxfnnsveqhsrok.supabase.co/storage/v1/object/sign/teachies/Teachy%20Cat.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV80ODkwNzgxNC01NjYwLTRiZjEtODlhZC1jY2RhYjZjYzhkZWQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWFjaGllcy9UZWFjaHkgQ2F0Lm1wNCIsImlhdCI6MTc1MzY5MTI3NywiZXhwIjoyMjI2NzMxMjc3fQ.EcJLNyrWRI_AlaLh5d-kSxyVvyRRCIov6yaSNqJxsqw" 
                   type="video/mp4" 
                 />
                 Your browser does not support the video tag.
@@ -227,9 +229,11 @@ const FeaturedTeachersSection = () => {
                 loop
                 playsInline
                 controls={false}
+                autoPlay
+                muted
               >
                 <source 
-                  src="https://orwybezmxvlgenhvwqhj.storage.supabase.co/v1/object/public/teachies//Teachy%20Nicko.mp4" 
+                  src="https://objcklmxfnnsveqhsrok.supabase.co/storage/v1/object/sign/teachies/Teachy%20Nicko.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV80ODkwNzgxNC01NjYwLTRiZjEtODlhZC1jY2RhYjZjYzhkZWQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWFjaGllcy9UZWFjaHkgTmlja28ubXA0IiwiaWF0IjoxNzUzNjkxOTA3LCJleHAiOjIyMjY3MzE5MDd9.9Oy8cXRjqH84Dr59NzTUTImJRKIRgPlvcv8jUPoR9OQ" 
                   type="video/mp4" 
                 />
                 Your browser does not support the video tag.

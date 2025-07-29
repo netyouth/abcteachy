@@ -3,8 +3,10 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { LogIn, Menu } from "lucide-react";
+import { LogIn, Menu, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavigationItem {
   href: string;
@@ -39,6 +41,21 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     ...props
   }, ref) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const navigate = useNavigate();
+    const { user, profile, signOut } = useAuth();
+
+    const handleAuthClick = () => {
+      if (onAuthClick) {
+        onAuthClick();
+      } else {
+        navigate('/login');
+      }
+    };
+
+    const handleSignOut = async () => {
+      await signOut();
+      navigate('/');
+    };
 
     const handleNavigationClick = (href: string, external?: boolean) => {
       if (external) {
@@ -51,6 +68,53 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
         }
       }
       setIsMobileMenuOpen(false);
+    };
+
+    const AuthButton = ({ isMobile = false }: { isMobile?: boolean }) => {
+      if (user && profile) {
+        return (
+          <div className={cn("flex items-center space-x-2", isMobile && "flex-col space-x-0 space-y-2 w-full")}>
+            <span className="text-sm text-muted-foreground">
+              Welcome, {profile.full_name}
+            </span>
+            {profile.role === 'admin' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className={cn("flex items-center space-x-2", isMobile && "w-full")}
+              >
+                <User className="w-4 h-4" />
+                <span>Admin Panel</span>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className={cn("flex items-center space-x-2", isMobile && "w-full")}
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </Button>
+          </div>
+        );
+      }
+
+      return (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleAuthClick}
+          className={cn(
+            "flex items-center space-x-2 hover:bg-primary hover:text-primary-foreground transition-colors",
+            isMobile && "w-full justify-center"
+          )}
+        >
+          <LogIn className="w-4 h-4" />
+          <span>Sign In</span>
+        </Button>
+      );
     };
 
     const NavigationLinks = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -98,17 +162,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
             <div className="hidden md:flex items-center space-x-6">
               <NavigationLinks />
               
-              {showAuthButton && (
-            <Button 
-              variant="outline" 
-              size="sm"
-                  onClick={onAuthClick}
-                  className="flex items-center space-x-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-                  <LogIn className="w-4 h-4" />
-                  <span>Sign In</span>
-            </Button>
-              )}
+              {showAuthButton && <AuthButton />}
           </div>
 
             {/* Mobile Menu */}
@@ -133,14 +187,9 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                     <NavigationLinks isMobile />
                     
                     {showAuthButton && (
-              <Button 
-                variant="outline" 
-                        onClick={onAuthClick}
-                        className="flex items-center justify-center space-x-2 w-full mt-6"
-              >
-                        <LogIn className="w-4 h-4" />
-                        <span>Sign In</span>
-              </Button>
+                      <div className="mt-6">
+                        <AuthButton isMobile />
+                      </div>
                     )}
                   </div>
                 </SheetContent>
