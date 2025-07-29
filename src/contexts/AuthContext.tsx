@@ -39,12 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           // Fetch user profile after auth state change
           setTimeout(async () => {
-            const { data: profile } = await supabase
+            const { data: profile, error } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
-              .single();
-            setProfile(profile);
+              .maybeSingle();
+            if (!error) {
+              setProfile(profile);
+            }
           }, 0);
         } else {
           setProfile(null);
@@ -65,9 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            setProfile(profile);
+          .maybeSingle()
+          .then(({ data: profile, error }) => {
+            if (!error) {
+              setProfile(profile);
+            }
             setLoading(false);
           });
       } else {
