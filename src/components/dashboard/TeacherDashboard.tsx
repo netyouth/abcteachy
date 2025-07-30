@@ -1,23 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { 
   Users, 
   Calendar, 
   MessageCircle, 
-  Clock, 
   Home,
   LogOut,
   User,
   DollarSign,
   CheckCircle,
   BookOpen,
-  Video,
   Bell,
   Settings,
   Plus
@@ -47,7 +44,7 @@ export function TeacherDashboard() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  
   const [activeTab, setActiveTab] = useState('overview');
 
   // Real teacher data from Supabase
@@ -140,24 +137,6 @@ export function TeacherDashboard() {
     );
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'confirmed':
-        return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-100 text-blue-800">Completed</Badge>;
-      case 'available':
-        return <Badge variant="secondary">Available</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const formatTime = (timeStr: string) => {
-    return timeStr;
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -190,7 +169,7 @@ export function TeacherDashboard() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || undefined} />
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         {profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
                       </AvatarFallback>

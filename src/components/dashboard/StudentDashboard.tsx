@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,23 +10,20 @@ import {
   BookOpen, 
   Calendar, 
   MessageCircle, 
-  Search,
   Home,
   LogOut,
   User,
   Clock,
   Star,
-  DollarSign,
   Video,
   Globe,
   Award,
-  Target,
   Bell,
-  Filter
+  Filter,
+  Target
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,11 +37,11 @@ import { Input } from '@/components/ui/input';
 export function StudentDashboard() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  
   const [activeTab, setActiveTab] = useState('overview');
 
   // ESL Student data - in a real app, this would come from your database
-  const [studentStats, setStudentStats] = useState({
+  const [studentStats] = useState({
     currentLevel: 'Intermediate',
     hoursLearned: 45,
     lessonsCompleted: 18,
@@ -197,7 +194,7 @@ export function StudentDashboard() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || undefined} />
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         {profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
                       </AvatarFallback>

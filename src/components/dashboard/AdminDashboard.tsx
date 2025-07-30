@@ -1,23 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { 
   Users, 
-  GraduationCap, 
-  UserPlus, 
   TrendingUp, 
   Home,
   LogOut,
   User,
-  Calendar,
-  MessageCircle,
   BookOpen,
-  DollarSign,
   Settings,
   Shield,
   AlertTriangle,
@@ -73,7 +67,7 @@ export function AdminDashboard() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   
   // Real data from Supabase
@@ -89,7 +83,7 @@ export function AdminDashboard() {
   });
   
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
-  const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
+  const [, setRecentBookings] = useState<RecentBooking[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   // Fetch real data from Supabase
@@ -116,18 +110,20 @@ export function AdminDashboard() {
       const oneMonthAgo = new Date();
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       
-      const { data: newUsersData, error: newUsersError } = await supabase
+      const { data: newUsersData } = await supabase
         .from('profiles')
         .select('id')
         .gte('created_at', oneMonthAgo.toISOString());
 
       // Get booking statistics
-      const { data: bookingsData, error: bookingsError } = await supabase
+      const { data: bookingsData } = await supabase
         .from('lesson_bookings')
         .select('status');
 
       const bookingCounts = bookingsData?.reduce((acc, booking) => {
-        acc[booking.status] = (acc[booking.status] || 0) + 1;
+        if (booking.status) {
+          acc[booking.status] = (acc[booking.status] || 0) + 1;
+        }
         return acc;
       }, {} as Record<string, number>) || {};
 
@@ -176,7 +172,7 @@ export function AdminDashboard() {
 
       // Get emails from auth.users (need to join manually due to RLS)
       const userIds = usersData.map(u => u.id);
-      const { data: authData } = await supabase
+      const { } = await supabase
         .from('profiles')
         .select('id')
         .in('id', userIds);
@@ -231,8 +227,8 @@ export function AdminDashboard() {
           student_name: studentData?.full_name || 'Unknown Student',
           teacher_name: teacherData?.full_name || 'Unknown Teacher',
           scheduled_at: new Date(booking.scheduled_at).toLocaleDateString(),
-          duration_minutes: booking.duration_minutes,
-          status: booking.status,
+          duration_minutes: booking.duration_minutes || 60,
+          status: (booking.status as 'pending' | 'confirmed' | 'completed' | 'cancelled') || 'pending',
           lesson_topic: booking.lesson_topic || undefined
         });
       }
@@ -267,20 +263,6 @@ export function AdminDashboard() {
     navigate('/');
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'confirmed':
-        return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-100 text-blue-800">Completed</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
@@ -341,7 +323,7 @@ export function AdminDashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                    <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || undefined} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
                     </AvatarFallback>
@@ -459,7 +441,7 @@ export function AdminDashboard() {
                   ) : recentUsers.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">No users found</div>
                   ) : (
-                    recentUsers.map((user, index) => (
+                    recentUsers.map((user) => (
                       <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-10 w-10">
