@@ -35,13 +35,23 @@ export function useBookings(filters?: { studentId?: string; teacherId?: string; 
       }
       // Prefer RPCs to avoid RLS edge cases on direct selects
       if (filters?.studentId && !filters?.teacherId) {
-        const { data, error } = await supabase.rpc('get_student_bookings', {
+        // Prefer RPC; gracefully fallback to direct select if RPC is unavailable
+        const rpcRes = await supabase.rpc('get_student_bookings', {
           p_student_id: filters.studentId,
           p_from: filters.from,
           p_to: filters.to,
         });
+        if (!rpcRes.error && rpcRes.data) {
+          setBookings((rpcRes.data as unknown as Booking[]) || []);
+          return;
+        }
+        // Fallback path with RLS: direct select by student_id
+        let q = supabase.from('bookings').select('*').order('start_at', { ascending: true }).eq('student_id', filters.studentId);
+        if (filters?.from) q = q.gte('start_at', filters.from);
+        if (filters?.to) q = q.lte('end_at', filters.to);
+        const { data, error } = await q;
         if (error) throw error;
-        setBookings((data as unknown as Booking[]) || []);
+        setBookings((data as Booking[]) || []);
         return;
       }
       
@@ -105,7 +115,11 @@ export function useBookings(filters?: { studentId?: string; teacherId?: string; 
   }, [supabase, fetchBookings]);
 
   const deleteBooking = useCallback(async (id: string) => {
-    const { error } = await supabase.from('bookings').delete().eq('id', id);
+    // Delete the booking record directly
+    const { error } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('id', id);
     if (error) throw error;
     await fetchBookings();
   }, [supabase, fetchBookings]);

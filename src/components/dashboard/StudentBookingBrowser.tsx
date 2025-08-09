@@ -15,6 +15,7 @@ import { useBookings } from '@/hooks/useBookings';
 import { generateAvailableSlots, toISO } from '@/utils/booking-utils';
 import { TablesInsert, Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
+import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 type Profile = Tables<'profiles'>;
 
@@ -24,7 +25,8 @@ export default function StudentBookingBrowser() {
   const [teachers, setTeachers] = useState<Profile[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [slots, setSlots] = useState<{ label: string; start: Date; end: Date }[]>([]);
+  const [selectedDuration, setSelectedDuration] = useState<number>(30); // 30 or 60 minutes
+  const [slots, setSlots] = useState<{ label: string; start: Date; end: Date; duration: number }[]>([]);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const { createBooking } = useBookings();
   const { bookings: myBookings, updateBooking, loading: bookingsLoading, refetch: refetchMyBookings } = useBookings({ studentId: user?.id });
@@ -56,49 +58,77 @@ export default function StudentBookingBrowser() {
     const loadSlots = async () => {
       if (!selectedTeacher) return setSlots([]);
       setLoadingSlots(true);
-      const target = new Date(selectedDate);
-      const dayStart = new Date(target);
-      dayStart.setUTCHours(0, 0, 0, 0);
-      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-      const { data: availability } = await supabase
-        .from('teacher_availability')
-        .select('*')
-        .eq('teacher_id', selectedTeacher);
-      // Use RPC to fetch teacher's booked times without exposing identities (RLS-safe)
-      const { data: bookedRanges } = await supabase.rpc('get_teacher_booked_times', {
-        p_teacher_id: selectedTeacher,
-        p_day_start: dayStart.toISOString(),
-        p_day_end: dayEnd.toISOString(),
-      });
-      const { data: unavail } = await supabase.rpc('get_teacher_unavailable_times', {
-        p_teacher_id: selectedTeacher,
-        p_day_start: dayStart.toISOString(),
-        p_day_end: dayEnd.toISOString(),
-      });
-      // Fallback: if no configured availability, assume default open hours
-      const hasConfigured = Array.isArray(availability) && availability.length > 0;
-      const fallbackAvailability = hasConfigured
-        ? (availability as any)
-        : ([{
-            weekday: target.getDay(),
-            start_time: '08:00:00',
-            end_time: '20:00:00',
-            slot_minutes: 60,
-            is_active: true,
-          }] as any);
+      try {
+        const target = new Date(selectedDate);
+        const dayStart = new Date(target);
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+        const { data: availability } = await supabase
+          .from('teacher_availability')
+          .select('*')
+          .eq('teacher_id', selectedTeacher);
 
-      const generated = generateAvailableSlots(
-        target,
-        fallbackAvailability || [],
-        [],
-        ([...((unavail as any) || []), ...((bookedRanges as any) || [])])
-      );
-      setSlots(generated);
-      setSelectedSlotIndex(null);
-      setLoadingSlots(false);
+        // Try RPCs; fallback to direct selects if RPCs are unavailable
+        const bookedRes = await supabase.rpc('get_teacher_booked_times', {
+          p_teacher_id: selectedTeacher,
+          p_day_start: dayStart.toISOString(),
+          p_day_end: dayEnd.toISOString(),
+        });
+        const unavailRes = await supabase.rpc('get_teacher_unavailable_times', {
+          p_teacher_id: selectedTeacher,
+          p_day_start: dayStart.toISOString(),
+          p_day_end: dayEnd.toISOString(),
+        });
+        let bookedRanges = bookedRes.data as any[] | null;
+        let unavail = unavailRes.data as any[] | null;
+        if (bookedRes.error || !Array.isArray(bookedRanges)) {
+          const { data } = await supabase
+            .from('bookings')
+            .select('start_at,end_at,status')
+            .eq('teacher_id', selectedTeacher)
+            .gte('start_at', dayStart.toISOString())
+            .lt('end_at', dayEnd.toISOString());
+          bookedRanges = (data as any[])?.map((b: any) => ({ start_at: b.start_at, end_at: b.end_at, status: b.status })) || [];
+        }
+        if (unavailRes.error || !Array.isArray(unavail)) {
+          const { data } = await supabase
+            .from('teacher_unavailability')
+            .select('start_at,end_at')
+            .eq('teacher_id', selectedTeacher)
+            .gte('start_at', dayStart.toISOString())
+            .lt('end_at', dayEnd.toISOString());
+          unavail = (data as any[]) || [];
+        }
+
+        // Fallback: if no configured availability, assume default open hours with 25-minute slots
+        const hasConfigured = Array.isArray(availability) && availability.length > 0;
+        const fallbackAvailability = hasConfigured
+          ? (availability as any)
+          : ([{
+              weekday: target.getDay(),
+              start_time: '08:00:00',
+              end_time: '20:00:00',
+              slot_minutes: 25,
+              is_active: true,
+            }] as any);
+
+        const generated = generateAvailableSlots(
+          target,
+          fallbackAvailability || [],
+          [],
+          ([...((unavail as any) || []), ...((bookedRanges as any) || [])]),
+          selectedDuration
+        );
+        setSlots(generated);
+        setSelectedSlotIndex(null);
+      } catch (err: any) {
+        setSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
     };
     loadSlots();
-  }, [supabase, selectedTeacher, selectedDate]);
+  }, [supabase, selectedTeacher, selectedDate, selectedDuration]);
 
   const handleBook = async () => {
     if (!user?.id || !selectedTeacher || selectedSlotIndex === null) return;
@@ -113,91 +143,222 @@ export default function StudentBookingBrowser() {
     } as any;
     await createBooking(payload);
     await refetchMyBookings();
-    toast({ title: 'Booking created', description: `${slot.label} with selected teacher` });
+    const durationText = selectedDuration === 60 ? '1-hour' : `${selectedDuration}-minute`;
+    toast({ title: 'Booking created', description: `${durationText} class ${slot.label} with selected teacher` });
     setIsConfirmOpen(false);
   };
 
   return (
-    <Card>
+    <Card className="border-primary/20 bg-gradient-to-br from-card to-card/50">
       <CardHeader>
-        <CardTitle>Book a Class</CardTitle>
-        <CardDescription>Choose a teacher, date, and time slot. All times are in your local time.</CardDescription>
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-lg sm:text-xl">Book a Class</CardTitle>
+            <CardDescription className="text-sm">Choose a teacher, date and time. Times shown in your local timezone.</CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Teacher</Label>
-              <Select value={selectedTeacher || ''} onValueChange={(v) => setSelectedTeacher(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select teacher" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teachers.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <div className="rounded-md border p-2">
-                <CalendarUI
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(d) => d && setSelectedDate(d)}
-                  disabled={(d) => d < new Date(new Date().toDateString())}
-                  className="rounded-md"
-                />
-              </div>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="space-y-4 sm:space-y-6">
+            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent sticky top-2 md:static z-20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-semibold">Choose Teacher</Label>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Select value={selectedTeacher || ''} onValueChange={(v) => setSelectedTeacher(v)}>
+                  <SelectTrigger className="h-11 touch-manipulation cursor-pointer">
+                    <SelectValue placeholder="Select a teacher" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[260px]">
+                    {teachers.map((t) => (
+                      <SelectItem key={t.id} value={t.id} className="py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="truncate max-w-[220px] sm:max-w-none">{t.full_name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-semibold">Pick Date</Label>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border border-border/50 p-3 pb-4 bg-background/50">
+                  <CalendarUI
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(d) => d && setSelectedDate(d)}
+                    disabled={(d) => d < new Date(new Date().toDateString())}
+                    className="rounded-md w-full pb-2"
+                    classNames={{
+                      day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                      day_today: "bg-primary/10 text-primary font-semibold"
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent mt-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-semibold">Class Duration</Label>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={selectedDuration === 30 ? 'default' : 'outline'}
+                    onClick={() => {
+                      setSelectedDuration(30);
+                      setSelectedSlotIndex(null); // Reset selected slot when duration changes
+                    }}
+                    className="touch-manipulation cursor-pointer"
+                  >
+                    <span className="pointer-events-none">30 min</span>
+                  </Button>
+                  <Button
+                    variant={selectedDuration === 60 ? 'default' : 'outline'}
+                    onClick={() => {
+                      setSelectedDuration(60);
+                      setSelectedSlotIndex(null); // Reset selected slot when duration changes
+                    }}
+                    className="touch-manipulation cursor-pointer"
+                  >
+                    <span className="pointer-events-none">1 hour</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="lg:col-span-2 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">Available slots</div>
-              <Badge variant="outline">{slots.length} slots</Badge>
-            </div>
-            <div className="min-h-[120px]">
-              {loadingSlots ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Skeleton key={i} className="h-9" />
-                  ))}
-                </div>
-              ) : slots.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No slots available for this date.</div>
-              ) : (
-                <ScrollArea className="h-[220px] rounded-md border p-3">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    {slots.map((s, i) => (
-                      <Button
-                        key={`${s.label}-${i}`}
-                        variant={selectedSlotIndex === i ? 'default' : 'outline'}
-                        onClick={() => setSelectedSlotIndex(i)}
-                        className="justify-center"
-                      >
-                        {s.label}
-                      </Button>
-                    ))}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            <Card className="border-border/50">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <Label className="text-sm font-semibold">Available Time Slots</Label>
                   </div>
-                </ScrollArea>
-              )}
-            </div>
-            <div>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary text-xs sm:text-sm">
+                    {slots.length} {slots.length === 1 ? 'slot' : 'slots'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="min-h-[180px]">
+                  {!selectedTeacher ? (
+                    <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-center px-4">
+                      <User className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
+                      <p className="text-xs sm:text-sm text-muted-foreground">Please select a teacher to view available slots</p>
+                    </div>
+                  ) : loadingSlots ? (
+                    <div className={`grid ${selectedDuration === 30 ? 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'} gap-2 sm:gap-3`}>
+                      {Array.from({ length: selectedDuration === 30 ? 12 : 8 }).map((_, i) => (
+                        <Skeleton key={i} className="h-10 sm:h-12 rounded-lg" />
+                      ))}
+                    </div>
+                  ) : slots.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-center px-4">
+                      <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
+                      <p className="text-xs sm:text-sm text-muted-foreground">No available slots for {selectedDate.toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Try selecting a different date</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className={`${selectedDuration === 30 ? 'h-[260px] sm:h-[360px]' : 'h-[200px] sm:h-[280px]'} pr-2 sm:pr-4`}>
+                      <div className={`grid ${selectedDuration === 30 ? 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'} gap-2 sm:gap-3`}>
+                        {slots.map((s, i) => (
+                          <Button
+                            key={`${s.label}-${i}`}
+                            variant={selectedSlotIndex === i ? 'default' : 'outline'}
+                            onClick={() => {
+                              console.log('Slot clicked:', s.label, i);
+                              setSelectedSlotIndex(i);
+                            }}
+                            className={`h-10 sm:h-12 flex-col gap-0.5 sm:gap-1 transition-all duration-200 hover:scale-105 text-xs sm:text-sm touch-manipulation cursor-pointer ${
+                              selectedSlotIndex === i 
+                                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                                : 'hover:border-primary/50 hover:bg-primary/5'
+                            }`}
+                          >
+                            <span className="font-semibold pointer-events-none">{s.label}</span>
+                            <span className="text-xs opacity-70 hidden sm:inline pointer-events-none">
+                              {s.duration === 60 ? '1hr' : `${s.duration}min`}
+                            </span>
+                          </Button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="flex justify-center px-4 sm:px-0">
               <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 <DialogTrigger asChild>
-                  <Button disabled={!selectedTeacher || selectedSlotIndex === null}>Book Class</Button>
+                  <Button 
+                    disabled={!selectedTeacher || selectedSlotIndex === null}
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-manipulation"
+                    size="lg"
+                    onClick={() => console.log('Book This Class clicked', { selectedTeacher, selectedSlotIndex })}
+                  >
+                    <Calendar className="mr-2 h-4 w-4 sm:h-5 sm:w-5 pointer-events-none" />
+                    <span className="pointer-events-none">Book This Class</span>
+                  </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Confirm Booking</DialogTitle>
-                    <DialogDescription>
-                      You are booking {selectedSlotIndex !== null ? slots[selectedSlotIndex].label : ''} with the selected teacher.
+                    <DialogTitle className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                      Confirm Your Booking
+                    </DialogTitle>
+                    <DialogDescription className="text-left pt-2">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="font-medium">Time:</span>
+                          <span>{selectedSlotIndex !== null ? slots[selectedSlotIndex].label : ''}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Date:</span>
+                          <span>{selectedDate.toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Duration:</span>
+                          <span>{selectedDuration === 60 ? '1 hour' : `${selectedDuration} minutes`}</span>
+                        </div>
+                      </div>
                     </DialogDescription>
                   </DialogHeader>
-                  <DialogFooter>
-                    <Button onClick={handleBook}>Confirm</Button>
+                  <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={() => setIsConfirmOpen(false)} className="touch-manipulation">
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        console.log('Confirm Booking clicked');
+                        handleBook();
+                      }} 
+                      className="bg-gradient-to-r from-primary to-primary/80 touch-manipulation"
+                    >
+                      Confirm Booking
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -205,52 +366,116 @@ export default function StudentBookingBrowser() {
           </div>
         </div>
 
-        <div className="pt-2">
-          <Card>
+        <div className="pt-4 sm:pt-6">
+          <Card className="border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
             <CardHeader>
-              <CardTitle className="text-base">Your Upcoming Bookings</CardTitle>
-              <CardDescription>Manage and cancel your upcoming classes.</CardDescription>
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-secondary/10 rounded-lg flex-shrink-0">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-foreground" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base sm:text-lg">Your Upcoming Bookings</CardTitle>
+                  <CardDescription className="text-sm">Manage your scheduled classes and appointments</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 sm:space-y-3">
               {bookingsLoading ? (
-                <div className="space-y-2">
+                <div className="space-y-2 sm:space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12" />
+                    <Skeleton key={i} className="h-16 sm:h-20 rounded-lg" />
                   ))}
                 </div>
               ) : (myBookings || []).filter((b) => new Date(b.start_at) >= new Date()).length === 0 ? (
-                <div className="text-sm text-muted-foreground">No upcoming bookings.</div>
+                <div className="text-center py-6 sm:py-8">
+                  <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No upcoming bookings</p>
+                  <p className="text-xs text-muted-foreground mt-1">Book your first class above!</p>
+                </div>
               ) : (
                 (myBookings || [])
                   .filter((b) => new Date(b.start_at) >= new Date())
                   .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
-                  .map((b) => (
-                    <div key={b.id} className="flex items-center justify-between border rounded-md p-3">
-                      <div className="space-y-1">
-                        <div className="font-medium">{new Date(b.start_at).toLocaleString()} - {new Date(b.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                        <div className="text-xs text-muted-foreground">Status: <Badge variant="outline">{b.status}</Badge></div>
+                  .map((b) => {
+                    const getStatusIcon = (status: string) => {
+                      switch (status) {
+                        case 'confirmed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+                        case 'canceled': return <XCircle className="h-4 w-4 text-red-500" />;
+                        default: return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+                      }
+                    };
+                    
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case 'confirmed': return 'bg-green-50 border-green-200 text-green-800';
+                        case 'canceled': return 'bg-red-50 border-red-200 text-red-800';
+                        default: return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+                      }
+                    };
+                    
+                    return (
+                      <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-border/50 rounded-lg p-3 sm:p-4 bg-background/50 hover:bg-background/80 transition-colors gap-3 sm:gap-0">
+                        <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+                            <span className="font-semibold text-sm sm:text-base">
+                              {new Date(b.start_at).toLocaleDateString()} at {new Date(b.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {getStatusIcon(b.status)}
+                            <Badge variant="outline" className={`text-xs ${getStatusColor(b.status)}`}>
+                              {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">• {Math.round((new Date(b.end_at).getTime() - new Date(b.start_at).getTime()) / (1000 * 60))} min duration</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                          {b.status !== 'canceled' && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="hover:bg-destructive hover:text-destructive-foreground hover:border-destructive text-xs sm:text-sm touch-manipulation cursor-pointer"
+                                  onClick={() => console.log('Cancel booking clicked')}
+                                >
+                                  Cancel
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="flex items-center gap-2">
+                                    <XCircle className="h-5 w-5 text-destructive" />
+                                    Cancel this booking?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will cancel your class scheduled for {new Date(b.start_at).toLocaleString()}. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={async () => { 
+                                      await updateBooking(b.id, { status: 'canceled' as any }); 
+                                      await refetchMyBookings(); 
+                                      toast({ 
+                                        title: 'Booking canceled', 
+                                        description: 'Your class has been successfully canceled.' 
+                                      }); 
+                                    }}
+                                    className="bg-destructive hover:bg-destructive/90"
+                                  >
+                                    Yes, Cancel
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive" disabled={b.status === 'canceled'}>
-                              Cancel
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Cancel booking?</AlertDialogTitle>
-                              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Close</AlertDialogCancel>
-                              <AlertDialogAction onClick={async () => { await updateBooking(b.id, { status: 'canceled' as any }); await refetchMyBookings(); toast({ title: 'Booking canceled' }); }}>Confirm</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
               )}
             </CardContent>
           </Card>
