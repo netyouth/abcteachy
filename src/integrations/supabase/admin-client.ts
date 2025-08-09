@@ -56,6 +56,22 @@ export async function createUserAsAdmin(
     }
     
     console.log('User created successfully with admin privileges');
+
+    // Ensure a profiles row exists for this user so they show up in lists
+    if (data?.user?.id) {
+      const profilePayload = {
+        id: data.user.id,
+        full_name: fullName,
+        role: role,
+      } as const;
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .upsert(profilePayload, { onConflict: 'id' });
+      if (profileError) {
+        console.warn('Profile upsert failed (non-fatal):', profileError);
+      }
+    }
+
     return { data, error: null };
   } catch (error) {
     console.error('Exception in createUserAsAdmin:', error);

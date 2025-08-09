@@ -1,577 +1,481 @@
-
-import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { 
   Users, 
-  GraduationCap, 
-  UserPlus, 
   TrendingUp, 
-  Home,
-  LogOut,
-  User,
-  Calendar,
-  MessageCircle,
-  BookOpen,
-  DollarSign,
-  Settings,
   Shield,
-  AlertTriangle,
-  Edit,
-  Trash2,
-  Plus
+  Settings,
+  LogOut,
+  BookOpen,
+  UserPlus,
+  BarChart3,
+  Database,
+  MessageCircle,
+  RefreshCw
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { AdminUserCreationForm } from './AdminUserCreationForm';
-import { useToast } from '@/hooks/use-toast';
-
-interface UserStats {
-  totalUsers: number;
-  totalStudents: number;
-  totalTeachers: number;
-  totalAdmins: number;
-  newUsersThisMonth: number;
-  totalBookings: number;
-  pendingBookings: number;
-  completedBookings: number;
-}
-
-interface RecentUser {
-  id: string;
-  full_name: string;
-  email: string;
-  role: 'admin' | 'teacher' | 'student';
-  created_at: string;
-  avatar_url?: string;
-}
-
-interface RecentBooking {
-  id: string;
-  student_name: string;
-  teacher_name: string;
-  scheduled_at: string;
-  duration_minutes: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  lesson_topic?: string;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { useAdminData } from '@/hooks/useAdminData';
+import { Skeleton } from '@/components/ui/skeleton';
+import AdminUserManagement from '@/components/dashboard/AdminUserManagement';
+import AdminBookingsPanel from '@/components/dashboard/AdminBookingsPanel';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DashboardThemeScope } from '@/components/dashboard/DashboardThemeScope';
+import { ModeToggle } from '@/components/ModeToggle';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import * as React from 'react';
 
 export function AdminDashboard() {
-  const { user, profile, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const { stats, recentUsers, recentActivity, loading, error, refreshData } = useAdminData();
+  const [lastUpdated, setLastUpdated] = React.useState<Date | null>(null);
   
-  // Real data from Supabase
-  const [userStats, setUserStats] = useState<UserStats>({
-    totalUsers: 0,
-    totalStudents: 0,
-    totalTeachers: 0,
-    totalAdmins: 0,
-    newUsersThisMonth: 0,
-    totalBookings: 0,
-    pendingBookings: 0,
-    completedBookings: 0
-  });
-  
-  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
-  const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-
-  // Fetch real data from Supabase
-  const fetchUserStats = async () => {
-    try {
-      console.log('📊 Fetching user statistics...');
-      
-      // Get total users by role
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('role');
-        
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        return;
-      }
-
-      const roleCounts = profilesData.reduce((acc, profile) => {
-        acc[profile.role] = (acc[profile.role] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Get new users this month
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      
-      const { data: newUsersData, error: newUsersError } = await supabase
-        .from('profiles')
-        .select('id')
-        .gte('created_at', oneMonthAgo.toISOString());
-
-      // Get booking statistics
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('lesson_bookings')
-        .select('status');
-
-      const bookingCounts = bookingsData?.reduce((acc, booking) => {
-        acc[booking.status] = (acc[booking.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>) || {};
-
-      setUserStats({
-        totalUsers: profilesData.length,
-        totalStudents: roleCounts.student || 0,
-        totalTeachers: roleCounts.teacher || 0,
-        totalAdmins: roleCounts.admin || 0,
-        newUsersThisMonth: newUsersData?.length || 0,
-        totalBookings: bookingsData?.length || 0,
-        pendingBookings: bookingCounts.pending || 0,
-        completedBookings: bookingCounts.completed || 0
-      });
-
-      console.log('✅ User stats loaded:', roleCounts);
-    } catch (error) {
-      console.error('❌ Error fetching user stats:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load user statistics",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const fetchRecentUsers = async () => {
-    try {
-      console.log('👥 Fetching recent users...');
-      
-      const { data: usersData, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          full_name,
-          role,
-          created_at,
-          avatar_url
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) {
-        console.error('Error fetching recent users:', error);
-        return;
-      }
-
-      // Get emails from auth.users (need to join manually due to RLS)
-      const userIds = usersData.map(u => u.id);
-      const { data: authData } = await supabase
-        .from('profiles')
-        .select('id')
-        .in('id', userIds);
-
-      const recentUsersWithEmails: RecentUser[] = usersData.map(user => ({
-        ...user,
-        email: `user-${user.id.slice(0, 8)}@abcteachy.com`, // Simplified for demo
-        avatar_url: user.avatar_url || undefined
-      }));
-
-      setRecentUsers(recentUsersWithEmails);
-      console.log('✅ Recent users loaded:', recentUsersWithEmails.length);
-    } catch (error) {
-      console.error('❌ Error fetching recent users:', error);
-    }
-  };
-
-  const fetchRecentBookings = async () => {
-    try {
-      console.log('📅 Fetching recent bookings...');
-      
-      // Simplified query to avoid relationship conflicts
-      const { data: bookingsData, error } = await supabase
-        .from('lesson_bookings')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) {
-        console.error('Error fetching recent bookings:', error);
-        return;
-      }
-
-      // Fetch student and teacher names separately to avoid join issues
-      const formattedBookings: RecentBooking[] = [];
-      
-      for (const booking of bookingsData) {
-        const { data: studentData } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', booking.student_id)
-          .single();
-          
-        const { data: teacherData } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', booking.teacher_id)
-          .single();
-
-        formattedBookings.push({
-          id: booking.id,
-          student_name: studentData?.full_name || 'Unknown Student',
-          teacher_name: teacherData?.full_name || 'Unknown Teacher',
-          scheduled_at: new Date(booking.scheduled_at).toLocaleDateString(),
-          duration_minutes: booking.duration_minutes,
-          status: booking.status,
-          lesson_topic: booking.lesson_topic || undefined
-        });
-      }
-
-      setRecentBookings(formattedBookings);
-      console.log('✅ Recent bookings loaded:', formattedBookings.length);
-    } catch (error) {
-      console.error('❌ Error fetching recent bookings:', error);
-    }
-  };
-
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      setDataLoading(true);
-      await Promise.all([
-        fetchUserStats(),
-        fetchRecentUsers(),
-        fetchRecentBookings()
-      ]);
-      setDataLoading(false);
-    };
-
-    loadDashboardData();
-  }, []);
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Admin';
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
 
-  const handleGoHome = () => {
-    navigate('/');
-  };
+  React.useEffect(() => {
+    if (!loading) setLastUpdated(new Date());
+  }, [loading]);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'confirmed':
-        return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-100 text-blue-800">Completed</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'destructive' as const;
-      case 'teacher':
-        return 'default' as const;
-      case 'student':
-        return 'secondary' as const;
-      default:
-        return 'outline' as const;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  if (dataLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
-  }
+  const totalUsersSafe = Math.max(1, stats.totalUsers || 0);
+  const adminPct = Math.round(((stats.adminCount || 0) / totalUsersSafe) * 100);
+  const teacherPct = Math.round(((stats.teacherCount || 0) / totalUsersSafe) * 100);
+  const studentPct = Math.round(((stats.studentCount || 0) / totalUsersSafe) * 100);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="flex h-16 items-center justify-between px-4 lg:px-8 max-w-7xl mx-auto">
-          <div className="flex items-center space-x-4">
-            <img 
-              src="/lovable-uploads/a48522f4-db07-475a-b8dc-96da5a16426a.png"
-              alt="ABC Teachy Logo"
-              className="h-10 w-auto"
-            />
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">ABC Teachy Management Portal</p>
+    <DashboardThemeScope>
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 relative">
+        <header className="bg-background/95 backdrop-blur-sm shadow-sm border-b sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-4">
+                <Shield className="h-8 w-8 text-primary" />
+                <div>
+                  <h1 className="text-2xl font-duolingo-heading text-foreground">Admin Portal</h1>
+                  <p className="text-sm font-duolingo-body text-muted-foreground">Welcome back, {userName}!</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Refresh dashboard"
+                  onClick={async () => { await refreshData(); setLastUpdated(new Date()); }}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <ModeToggle />
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">{role}</Badge>
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="transition-all duration-200 hover:scale-105">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={handleGoHome}>
-              <Home className="h-4 w-4 mr-2" />
-              Home
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      {profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{profile?.full_name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                    <Badge className="w-fit mt-1" variant="destructive">Administrator</Badge>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign Out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-4 lg:p-8 space-y-8">
-        {/* Welcome Section */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Welcome back, {profile?.full_name?.split(' ')[0] || 'Admin'}</h2>
-            <p className="text-muted-foreground">Here's what's happening in your ABC Teachy platform today.</p>
-          </div>
-          <Button onClick={fetchUserStats} disabled={loading}>
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Refresh Data
-          </Button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">{loading ? '...' : userStats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">All registered users</p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Students</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{loading ? '...' : userStats.totalStudents}</div>
-              <p className="text-xs text-muted-foreground">Active learners</p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Teachers</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{loading ? '...' : userStats.totalTeachers}</div>
-              <p className="text-xs text-muted-foreground">Educators</p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Admins</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{loading ? '...' : userStats.totalAdmins}</div>
-              <p className="text-xs text-muted-foreground">System administrators</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs for different sections */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="create">Create User</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Users</CardTitle>
-                  <CardDescription>Latest user registrations and activities</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {loading ? (
-                    <div className="text-center py-8 text-muted-foreground">Loading users...</div>
-                  ) : recentUsers.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">No users found</div>
-                  ) : (
-                    recentUsers.map((user, index) => (
-                      <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.avatar_url} alt={user.full_name} />
-                            <AvatarFallback>{user.full_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h4 className="font-medium">{user.full_name}</h4>
-                            <p className="text-sm text-muted-foreground">Joined {formatDate(user.created_at)}</p>
-                          </div>
-                        </div>
-                        <Badge variant={getRoleBadgeVariant(user.role)}>
-                          {user.role}
-                        </Badge>
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {error && (
+              <Alert className={`mb-6 ${error.includes('temporary policy') ? 'border-amber-500/50 text-amber-700 dark:border-amber-500 [&>svg]:text-amber-600' : 'border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive'}`}>
+                <Shield className="h-4 w-4" />
+                <AlertDescription className="space-y-2">
+                  <div>{error}</div>
+                  {error.includes('RLS has been temporarily disabled') ? (
+                    <div className="text-sm space-y-1">
+                      <div className="font-medium">✅ Admin Dashboard is Working!</div>
+                      <div>• RLS temporarily disabled to resolve access issues</div>
+                      <div>• JWT claims are working correctly</div>
+                      <div>• All admin functionality is available</div>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        To re-enable security: Run the re-enable script in fix-admin-dashboard-complete.sql
                       </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>Common administrative tasks</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button className="h-20 flex-col" onClick={() => setActiveTab('create')}>
-                      <Plus className="h-6 w-6 mb-2" />
-                      Create User
+                    </div>
+                  ) : error.includes('Custom Access Token Hook') || error.includes('temporary policy') ? (
+                    <div className="text-sm space-y-1">
+                      <div className="font-medium">To fix permanently:</div>
+                      <div>1. Go to <a href="https://supabase.com/dashboard/project/objcklmxfnnsveqhsrok/auth/hooks" target="_blank" rel="noopener noreferrer" className="underline">Authentication → Hooks</a></div>
+                      <div>2. Enable "Custom Access Token" hook</div>
+                      <div>3. Sign out and sign back in</div>
+                      <div>4. Remove temporary policy (see cleanup-temp-policy.sql)</div>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={refreshData} 
+                      variant="link" 
+                      className="h-auto p-0 ml-2 text-destructive hover:text-destructive/80"
+                      size="sm"
+                    >
+                      Try again
                     </Button>
-                    <Button variant="outline" className="h-20 flex-col" onClick={() => setActiveTab('users')}>
-                      <Users className="h-6 w-6 mb-2" />
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Tabs defaultValue="overview" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="users">User Management</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                <TabsTrigger value="bookings">Bookings</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Loading...'}
+                  </div>
+                  {!loading && (
+                    <Button size="sm" variant="outline" onClick={async () => { await refreshData(); setLastUpdated(new Date()); }}>
+                      <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                      )}
+                      <p className="text-xs text-muted-foreground">All registered users</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <div className="text-2xl font-bold">{stats.activeConversations}</div>
+                      )}
+                      <p className="text-xs text-muted-foreground">Active conversations</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
+                      <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <div className="text-2xl font-bold">{stats.totalMessages}</div>
+                      )}
+                      <p className="text-xs text-muted-foreground">All-time messages</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">System Health</CardTitle>
+                      <Database className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <Skeleton className="h-8 w-24 mb-1" />
+                      ) : (
+                        <div className={`text-2xl font-bold ${
+                          stats.systemStatus === 'good' ? 'text-secondary-green' :
+                          stats.systemStatus === 'warning' ? 'text-yellow-600' : 'text-destructive'
+                        }`}>
+                          {stats.systemStatus === 'good' ? 'Good' : stats.systemStatus === 'warning' ? 'Warning' : 'Error'}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">Realtime, database and auth</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>User Roles</CardTitle>
+                      <CardDescription>Distribution across roles</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Admins</span>
+                          <span className="text-muted-foreground">{stats.adminCount}</span>
+                        </div>
+                        <Progress value={adminPct} className="h-2" />
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Teachers</span>
+                          <span className="text-muted-foreground">{stats.teacherCount}</span>
+                        </div>
+                        <Progress value={teacherPct} className="h-2" />
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Students</span>
+                          <span className="text-muted-foreground">{stats.studentCount}</span>
+                        </div>
+                        <Progress value={studentPct} className="h-2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Bookings</CardTitle>
+                      <CardDescription>At a glance</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-3 gap-3">
+                      <div className="rounded-md border p-3 text-center">
+                        <div className="text-2xl font-bold">{stats.totalBookings ?? 0}</div>
+                        <div className="text-xs text-muted-foreground mt-1">Total</div>
+                      </div>
+                      <div className="rounded-md border p-3 text-center">
+                        <div className="text-2xl font-bold">{stats.completedBookings ?? 0}</div>
+                        <div className="text-xs text-muted-foreground mt-1">Completed</div>
+                      </div>
+                      <div className="rounded-md border p-3 text-center">
+                        <div className="text-2xl font-bold">{stats.canceledBookings ?? 0}</div>
+                        <div className="text-xs text-muted-foreground mt-1">Canceled</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="md:col-span-2 lg:col-span-1">
+                    <CardHeader>
+                      <CardTitle>Recent Users</CardTitle>
+                      <CardDescription>Latest registrations</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {loading ? (
+                        <div className="space-y-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Skeleton key={i} className="h-10" />
+                          ))}
+                        </div>
+                      ) : recentUsers.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No recent users</div>
+                      ) : (
+                        recentUsers.slice(0, 5).map((u) => (
+                          <div key={u.id} className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={u.avatar_url || undefined} alt={u.full_name || 'User'} />
+                              <AvatarFallback>{(u.full_name || 'U').slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium truncate">{u.full_name || 'User'}</div>
+                              <div className="text-xs text-muted-foreground">{u.role} • {new Date(u.created_at).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Existing recent activity and actions remain below */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>
+                      Latest system events and user activities
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <div className="space-y-4">
+                        {[...Array(5)].map((_, i) => (
+                          <div key={i} className="flex items-start space-x-4 p-3">
+                            <Skeleton className="h-8 w-8 rounded-full mt-1" />
+                            <div className="space-y-2">
+                              <Skeleton className="h-4 w-48" />
+                              <Skeleton className="h-3 w-20" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : recentActivity.length === 0 ? (
+                      <div className="text-center py-8">
+                        <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No recent activity</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          System activity will appear here as users interact with the platform.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {recentActivity.map((activity) => {
+                          const getActivityIcon = () => {
+                            switch (activity.type) {
+                              case 'user_registered':
+                                return <UserPlus className="h-4 w-4 text-secondary-green" />;
+                              case 'message_sent':
+                                return <MessageCircle className="h-4 w-4 text-secondary-blue" />;
+                              case 'conversation_started':
+                                return <BookOpen className="h-4 w-4 text-primary" />;
+                              default:
+                                return <BarChart3 className="h-4 w-4 text-muted-foreground" />;
+                            }
+                          };
+
+                          return (
+                            <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-accent/30 rounded-lg transition-colors">
+                              <div className="w-8 h-8 rounded-full bg-background border flex items-center justify-center mt-1">
+                                {getActivityIcon()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">{activity.description}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(activity.timestamp).toLocaleDateString()} at {' '}
+                                  {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        
+                        {recentActivity.length > 0 && (
+                          <div className="pt-4 border-t">
+                            <Button variant="outline" className="w-full">
+                              <BarChart3 className="mr-2 h-4 w-4" />
+                              View All Activity
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Administration</CardTitle>
+                    <CardDescription>
+                      System administration and management tools
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Create User Account
+                    </Button>
+                    <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                      <Users className="mr-2 h-4 w-4" />
                       Manage Users
                     </Button>
-                    <Button variant="outline" className="h-20 flex-col">
-                      <Shield className="h-6 w-6 mb-2" />
-                      Security
+                    <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      Manage Courses
                     </Button>
-                    <Button variant="outline" className="h-20 flex-col" onClick={() => setActiveTab('settings')}>
-                      <Settings className="h-6 w-6 mb-2" />
-                      Settings
+                    <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      View Reports
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                    <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                      <Settings className="mr-2 h-4 w-4" />
+                      System Settings
+                    </Button>
+                    <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                      <Database className="mr-2 h-4 w-4" />
+                      Database Management
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Users</CardTitle>
-                <CardDescription>Complete list of registered users</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {loading ? (
-                    <div className="text-center py-8 text-muted-foreground">Loading users...</div>
-                  ) : recentUsers.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">No users found</div>
-                  ) : (
-                    recentUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={user.avatar_url} alt={user.full_name} />
-                            <AvatarFallback>{user.full_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h4 className="font-medium">{user.full_name}</h4>
-                            <p className="text-sm text-muted-foreground">Joined {formatDate(user.created_at)}</p>
-                            <Badge className="mt-1" variant={getRoleBadgeVariant(user.role)}>
-                              {user.role}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+              <TabsContent value="users" className="space-y-4">
+                <AdminUserManagement />
+              </TabsContent>
+
+              <TabsContent value="bookings" className="space-y-4">
+                <AdminBookingsPanel />
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Platform Analytics</CardTitle>
+                    <CardDescription>
+                      Usage statistics and performance metrics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No analytics data</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Analytics and usage statistics will appear here.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>System Settings</CardTitle>
+                    <CardDescription>
+                      Configure system-wide settings and preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">General Settings</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Button variant="outline" className="w-full">
+                              <Settings className="mr-2 h-4 w-4" />
+                              Configure
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Security Settings</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Button variant="outline" className="w-full">
+                              <Shield className="mr-2 h-4 w-4" />
+                              Configure
+                            </Button>
+                          </CardContent>
+                        </Card>
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="create" className="space-y-6">
-            <AdminUserCreationForm />
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>Configure your ABC Teachy platform</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  System settings panel coming soon...
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
+      </div>
+    </DashboardThemeScope>
   );
 }

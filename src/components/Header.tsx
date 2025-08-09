@@ -42,7 +42,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
   }, ref) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
     const navigate = useNavigate();
-    const { user, profile, signOut } = useAuth();
+    const { user, role, signOut } = useAuth();
 
     const handleAuthClick = () => {
       if (onAuthClick) {
@@ -71,13 +71,14 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
     };
 
     const AuthButton = ({ isMobile = false }: { isMobile?: boolean }) => {
-      if (user && profile) {
+      if (user && role) {
+        const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
         return (
-          <div className={cn("flex items-center space-x-2", isMobile && "flex-col space-x-0 space-y-2 w-full")}>
+          <div className={cn("flex items-center space-x-2", isMobile && "flex-col space-x-0 space-y-2 w-full")}>            
             <span className="text-sm text-muted-foreground">
-              Welcome, {profile.full_name}
+              Welcome, {userName}
             </span>
-            {profile.role === 'admin' && (
+            {role === 'admin' && (
               <Button
                 variant="outline"
                 size="sm"
@@ -161,7 +162,6 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
           {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
               <NavigationLinks />
-              
               {showAuthButton && <AuthButton />}
           </div>
 
