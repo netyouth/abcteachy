@@ -12,7 +12,7 @@ import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { useBookings } from '@/hooks/useBookings';
-import { generateAvailableSlots, toISO } from '@/utils/booking-utils';
+import { generateAvailableSlots, toISO, TimeSlot } from '@/utils/booking-utils';
 import { TablesInsert, Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function StudentBookingBrowser() {
   const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedDuration, setSelectedDuration] = useState<number>(30); // 30 or 60 minutes
-  const [slots, setSlots] = useState<{ label: string; start: Date; end: Date; duration: number }[]>([]);
+  const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const { createBooking } = useBookings();
   const { bookings: myBookings, updateBooking, loading: bookingsLoading, refetch: refetchMyBookings } = useBookings({ studentId: user?.id });
@@ -115,8 +115,8 @@ export default function StudentBookingBrowser() {
         const generated = generateAvailableSlots(
           target,
           fallbackAvailability || [],
-          [],
-          ([...((unavail as any) || []), ...((bookedRanges as any) || [])]),
+          bookedRanges || [],
+          unavail || [],
           selectedDuration
         );
         setSlots(generated);
@@ -162,9 +162,9 @@ export default function StudentBookingBrowser() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="space-y-4 sm:space-y-6">
-            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent sticky top-2 md:static z-20">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="space-y-3 lg:space-y-6">
+            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-primary" />
@@ -198,14 +198,26 @@ export default function StudentBookingBrowser() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-border/50 p-3 pb-4 bg-background/50">
+                <div className="rounded-lg border border-border/50 p-2 sm:p-3 pb-3 sm:pb-4 bg-background/50 overflow-hidden">
                   <CalendarUI
                     mode="single"
                     selected={selectedDate}
                     onSelect={(d) => d && setSelectedDate(d)}
                     disabled={(d) => d < new Date(new Date().toDateString())}
-                    className="rounded-md w-full pb-2"
+                    className="rounded-md w-full mx-auto [--cell-size:2rem] sm:[--cell-size:2.25rem] lg:[--cell-size:2.5rem]"
                     classNames={{
+                      months: "flex flex-col gap-2 w-full max-w-none",
+                      month: "flex w-full flex-col gap-1 sm:gap-2",
+                      table: "w-full border-collapse table-fixed",
+                      weekdays: "flex w-full",
+                      weekday: "flex-1 text-center text-[0.7rem] sm:text-[0.8rem] p-1",
+                      week: "mt-1 sm:mt-2 flex w-full",
+                      day: "flex-1 aspect-square relative",
+                      nav: "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1 z-10",
+                      button_previous: "h-7 w-7 sm:h-8 sm:w-8 p-0",
+                      button_next: "h-7 w-7 sm:h-8 sm:w-8 p-0",
+                      month_caption: "flex h-8 sm:h-10 w-full items-center justify-center px-8 sm:px-10",
+                      caption_label: "text-sm sm:text-base font-medium truncate",
                       day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
                       day_today: "bg-primary/10 text-primary font-semibold"
                     }}
@@ -248,7 +260,7 @@ export default function StudentBookingBrowser() {
             </Card>
           </div>
 
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <div className="lg:col-span-2 space-y-3 lg:space-y-6">
             <Card className="border-border/50">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
@@ -262,7 +274,7 @@ export default function StudentBookingBrowser() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="min-h-[180px]">
+                <div className="min-h-[160px] lg:min-h-[180px]">
                   {!selectedTeacher ? (
                     <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-center px-4">
                       <User className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
@@ -281,7 +293,7 @@ export default function StudentBookingBrowser() {
                       <p className="text-xs text-muted-foreground mt-1">Try selecting a different date</p>
                     </div>
                   ) : (
-                    <ScrollArea className={`${selectedDuration === 30 ? 'h-[260px] sm:h-[360px]' : 'h-[200px] sm:h-[280px]'} pr-2 sm:pr-4`}>
+                    <ScrollArea className={`${selectedDuration === 30 ? 'h-[200px] sm:h-[260px] lg:h-[360px]' : 'h-[160px] sm:h-[200px] lg:h-[280px]'} pr-2 sm:pr-4`}>
                       <div className={`grid ${selectedDuration === 30 ? 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'} gap-2 sm:gap-3`}>
                         {slots.map((s, i) => (
                           <Button
@@ -310,12 +322,12 @@ export default function StudentBookingBrowser() {
               </CardContent>
             </Card>
             
-            <div className="flex justify-center px-4 sm:px-0">
+            <div className="flex justify-center px-2 sm:px-4 lg:px-0">
               <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 <DialogTrigger asChild>
                   <Button 
                     disabled={!selectedTeacher || selectedSlotIndex === null}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-manipulation"
+                    className="w-full lg:w-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 text-sm sm:text-base lg:text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-manipulation"
                     size="lg"
                     onClick={() => console.log('Book This Class clicked', { selectedTeacher, selectedSlotIndex })}
                   >
@@ -323,7 +335,7 @@ export default function StudentBookingBrowser() {
                     <span className="pointer-events-none">Book This Class</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-[90vw] sm:max-w-md mx-4">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-primary" />
@@ -366,7 +378,7 @@ export default function StudentBookingBrowser() {
           </div>
         </div>
 
-        <div className="pt-4 sm:pt-6">
+        <div className="pt-3 lg:pt-6">
           <Card className="border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
             <CardHeader>
               <div className="flex items-start gap-3">
@@ -414,8 +426,8 @@ export default function StudentBookingBrowser() {
                     };
                     
                     return (
-                      <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-border/50 rounded-lg p-3 sm:p-4 bg-background/50 hover:bg-background/80 transition-colors gap-3 sm:gap-0">
-                        <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
+                      <div key={b.id} className="flex flex-col gap-3 border border-border/50 rounded-lg p-3 sm:p-4 bg-background/50 hover:bg-background/80 transition-colors">
+                        <div className="space-y-1 sm:space-y-2 min-w-0">
                           <div className="flex items-center gap-2">
                             <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
                             <span className="font-semibold text-sm sm:text-base">
@@ -430,7 +442,7 @@ export default function StudentBookingBrowser() {
                             <span className="text-xs text-muted-foreground">• {Math.round((new Date(b.end_at).getTime() - new Date(b.start_at).getTime()) / (1000 * 60))} min duration</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                        <div className="flex items-center justify-end gap-2">
                           {b.status !== 'canceled' && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
