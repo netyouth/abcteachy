@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,6 +18,7 @@ import {
   Clock4,
   Ban
 } from 'lucide-react';
+import { STATUS_BADGE_TONE, listItem } from '@/components/dashboard/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeacherSchedule } from '@/hooks/useTeacherSchedule';
 import { useBookings } from '@/hooks/useBookings';
@@ -31,28 +31,36 @@ const statusIcons = {
   rescheduled: Clock
 };
 
-const statusColors = {
-  pending: 'text-yellow-600 bg-yellow-50 border-yellow-200',
-  confirmed: 'text-green-600 bg-green-50 border-green-200',
-  canceled: 'text-red-600 bg-red-50 border-red-200', 
-  completed: 'text-blue-600 bg-blue-50 border-blue-200',
-  rescheduled: 'text-orange-600 bg-orange-50 border-orange-200'
-};
+// Neutral card with color-coded left border + badge colors
+// left-border tones reserved (currently unused after redesign)
+
+// Use centralized status tones
 
 export default function TeacherScheduleUnified() {
   const { user, role } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'all'>('day');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
   // Day-specific schedule data
-  const { bookings: dayBookings, unavailability, loading: dayLoading, setBookingStatus, createBlock, deleteBlock, deleteBooking } = useTeacherSchedule(user?.id, selectedDate);
+  const { bookings: dayBookings, unavailability, loading: dayLoading, setBookingStatus, createBlock, deleteBlock } = useTeacherSchedule(user?.id, selectedDate);
   
   // All bookings data 
   const shouldFilterByTeacher = role !== 'admin';
-  const { bookings: allBookings, updateBooking, deleteBooking: deleteAllBooking, loading: allLoading } = useBookings(
+  const { bookings: allBookings, updateBooking, loading: allLoading } = useBookings(
     shouldFilterByTeacher && user?.id ? { teacherId: user.id } : undefined
   );
+
+  // Build a set of days that have at least one booking to highlight on calendar
+  const bookedDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const b of allBookings) {
+      if (b.status === 'canceled') continue;
+      const d = new Date(b.start_at);
+      // Normalize to local day string
+      set.add(new Date(d.getFullYear(), d.getMonth(), d.getDate()).toDateString());
+    }
+    return set;
+  }, [allBookings]);
 
   const [isBlockOpen, setIsBlockOpen] = useState(false);
   const [blockStart, setBlockStart] = useState<string>('09:00');
@@ -71,57 +79,59 @@ export default function TeacherScheduleUnified() {
   };
 
   const filteredAllBookings = useMemo(() => {
-    if (statusFilter === 'all') return allBookings;
-    return allBookings.filter(booking => booking.status === statusFilter);
+    const base = allBookings.filter(b => b.status !== 'canceled');
+    if (statusFilter === 'all') return base;
+    return base.filter(booking => booking.status === statusFilter);
   }, [allBookings, statusFilter]);
 
-  const BookingCard = ({ booking, onStatusUpdate, onDelete, showDate = false }: {
+  const visibleDayBookings = useMemo(() => {
+    return dayBookings.filter(b => b.status !== 'canceled');
+  }, [dayBookings]);
+
+  const BookingCard = ({ booking, onStatusUpdate }: {
     booking: any;
     onStatusUpdate: (id: string, update: any) => void;
-    onDelete?: (id: string) => void;
-    showDate?: boolean;
   }) => {
     const StatusIcon = statusIcons[booking.status as keyof typeof statusIcons] || AlertCircle;
+
+    // student_name is populated by useTeacherSchedule for day view; may be absent in full list
+
+    const start = new Date(booking.start_at)
+    const end = new Date(booking.end_at)
+    const dateStr = start.toLocaleDateString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric' })
+    const timeStr = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+    const durationMin = Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000))
     return (
-      <div className={`flex items-center justify-between rounded-lg border p-4 transition-all hover:shadow-md ${statusColors[booking.status as keyof typeof statusColors]}`}>
-        <div className="flex items-center space-x-4">
-          <div className="p-2 rounded-full bg-white/50">
-            <StatusIcon className="h-4 w-4" />
-          </div>
-          <div className="space-y-1">
-            <div className="font-medium flex items-center gap-2">
-              <Clock className="h-3 w-3" />
-              {showDate && <span>{new Date(booking.start_at).toLocaleDateString()} • </span>}
-              {new Date(booking.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(booking.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      <div className={listItem("rounded-xl p-4 hover:shadow-sm")}> 
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-center gap-2 text-base sm:text-lg font-semibold">
+              <Clock className="h-4 w-4 text-orange-500" aria-hidden="true" />
+              <span className="truncate">{dateStr} at {timeStr}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                {booking.status}
-              </Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs sm:text-sm ${STATUS_BADGE_TONE[booking.status] || ''}`}>
+                <StatusIcon className="h-4 w-4" aria-hidden="true" />
+                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+              </span>
+              <span className="text-sm text-muted-foreground">• {durationMin} min duration</span>
+              {booking.student_name && (
+                <span className="text-sm text-muted-foreground">• {booking.student_name}</span>
+              )}
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {booking.status !== 'confirmed' && booking.status !== 'canceled' && booking.status !== 'completed' && (
-            <Button size="sm" onClick={() => onStatusUpdate(booking.id, { status: 'confirmed' })}>
-              Confirm
-            </Button>
-          )}
-          {booking.status !== 'completed' && booking.status !== 'canceled' && (
-            <Button size="sm" variant="secondary" onClick={() => onStatusUpdate(booking.id, { status: 'completed' })}>
-              Complete
-            </Button>
-          )}
-          {booking.status !== 'canceled' && (
-            <Button size="sm" variant="outline" onClick={() => onStatusUpdate(booking.id, { status: 'canceled' })}>
-              Cancel
-            </Button>
-          )}
-          {booking.status === 'canceled' && onDelete && (
-            <Button size="sm" variant="destructive" onClick={() => onDelete(booking.id)}>
-              Delete
-            </Button>
-          )}
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:justify-end">
+            {booking.status === 'pending' && (
+              <Button size="sm" onClick={() => onStatusUpdate(booking.id, { status: 'confirmed' })}>
+                Confirm
+              </Button>
+            )}
+            {booking.status !== 'canceled' && booking.status !== 'completed' && (
+              <Button size="sm" variant="outline" onClick={() => onStatusUpdate(booking.id, { status: 'canceled' })}>
+                Cancel
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -153,7 +163,7 @@ export default function TeacherScheduleUnified() {
   );
 
   return (
-    <Card>
+    <Card className="border-orange-200">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -165,38 +175,11 @@ export default function TeacherScheduleUnified() {
               Manage your schedule, bookings, and availability in one place
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Select value={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'all')}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="day">Day View</SelectItem>
-                <SelectItem value="all">All Bookings</SelectItem>
-              </SelectContent>
-            </Select>
-            {viewMode === 'all' && (
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'all')}>
-          <TabsContent value="day" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <CardContent className="pb-2">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Calendar Section */}
               <div className="space-y-4">
                 <CalendarUI
@@ -205,11 +188,16 @@ export default function TeacherScheduleUnified() {
                   onSelect={(date) => date && setSelectedDate(date)}
                   disabled={() => false}
                   className="rounded-md border"
+                  // Highlight days with bookings in green
+                  modifiers={{
+                    booked: (day) => bookedDates.has(new Date(day.getFullYear(), day.getMonth(), day.getDate()).toDateString()),
+                  }}
                 />
 
+                {/* Allow blocking only when selected date has no bookings */}
                 <Dialog open={isBlockOpen} onOpenChange={setIsBlockOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" disabled={dayBookings.length > 0}>
                       <Plus className="h-4 w-4 mr-2" />
                       Block Time
                     </Button>
@@ -263,19 +251,6 @@ export default function TeacherScheduleUnified() {
 
               {/* Day Schedule Section */}
               <div className="lg:col-span-2 space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-                  <div className="font-medium">{dayLabel}</div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant="outline" className="bg-white">
-                      <Users className="h-3 w-3 mr-1" />
-                      {dayBookings.length} bookings
-                    </Badge>
-                    <Badge variant="outline" className="bg-white">
-                      <Ban className="h-3 w-3 mr-1" />
-                      {unavailability.length} blocks
-                    </Badge>
-                  </div>
-                </div>
 
                 {dayLoading ? (
                   <div className="space-y-3">
@@ -285,42 +260,32 @@ export default function TeacherScheduleUnified() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Bookings */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        Student Bookings
-                      </div>
-                      {dayBookings.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <div>No bookings for this day</div>
+                    {/* Bookings (hide empty state) */}
+                    {visibleDayBookings.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          Student Bookings
                         </div>
-                      ) : (
                         <div className="space-y-3">
-                          {dayBookings.map((booking) => (
+                          {visibleDayBookings.map((booking) => (
                             <BookingCard 
                               key={booking.id} 
                               booking={booking} 
                               onStatusUpdate={(id: string, update: any) => setBookingStatus(id, update.status)}
-                              onDelete={(id: string) => deleteBooking(id)}
                             />
                           ))}
                         </div>
-                      )}
-                    </div>
-
-                    {/* Personal Blocks */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <Ban className="h-4 w-4" />
-                        Personal Blocks
                       </div>
-                      {unavailability.length === 0 ? (
-                        <div className="text-center py-6 text-muted-foreground">
-                          <div>No blocks for this day</div>
+                    )}
+
+                    {/* Personal Blocks (hide empty state) */}
+                    {unavailability.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                          <Ban className="h-4 w-4" />
+                          Personal Blocks
                         </div>
-                      ) : (
                         <div className="space-y-3">
                           {unavailability.map((block) => (
                             <UnavailabilityCard 
@@ -330,31 +295,35 @@ export default function TeacherScheduleUnified() {
                             />
                           ))}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-          </TabsContent>
 
-          <TabsContent value="all" className="space-y-4">
+          {/* All bookings list below day view */}
+                  <div className="space-y-4 pb-16 md:pb-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="bg-white">
                   <Users className="h-3 w-3 mr-1" />
                   {filteredAllBookings.length} bookings
                 </Badge>
-                {statusFilter !== 'all' && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setStatusFilter('all')}
-                  >
-                    Clear filter
-                  </Button>
-                )}
               </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {allLoading ? (
@@ -372,8 +341,7 @@ export default function TeacherScheduleUnified() {
                 <div className="text-muted-foreground">
                   {statusFilter === 'all' 
                     ? 'Bookings will appear here when students schedule classes with you'
-                    : `No bookings with ${statusFilter} status found`
-                  }
+                    : `No bookings with ${statusFilter} status found`}
                 </div>
               </div>
             ) : (
@@ -383,14 +351,12 @@ export default function TeacherScheduleUnified() {
                     key={booking.id} 
                     booking={booking} 
                     onStatusUpdate={updateBooking}
-                    onDelete={(id: string) => deleteAllBooking(id)}
-                    showDate={true}
                   />
                 ))}
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
