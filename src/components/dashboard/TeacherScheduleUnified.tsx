@@ -46,11 +46,11 @@ export default function TeacherScheduleUnified() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
   // Day-specific schedule data
-  const { bookings: dayBookings, unavailability, loading: dayLoading, setBookingStatus, createBlock, deleteBlock } = useTeacherSchedule(user?.id, selectedDate);
+  const { bookings: dayBookings, unavailability, loading: dayLoading, setBookingStatus, createBlock, deleteBlock, deleteBooking } = useTeacherSchedule(user?.id, selectedDate);
   
   // All bookings data 
   const shouldFilterByTeacher = role !== 'admin';
-  const { bookings: allBookings, updateBooking, loading: allLoading } = useBookings(
+  const { bookings: allBookings, updateBooking, deleteBooking: deleteAllBooking, loading: allLoading } = useBookings(
     shouldFilterByTeacher && user?.id ? { teacherId: user.id } : undefined
   );
 
@@ -75,9 +75,10 @@ export default function TeacherScheduleUnified() {
     return allBookings.filter(booking => booking.status === statusFilter);
   }, [allBookings, statusFilter]);
 
-  const BookingCard = ({ booking, onStatusUpdate, showDate = false }: {
+  const BookingCard = ({ booking, onStatusUpdate, onDelete, showDate = false }: {
     booking: any;
     onStatusUpdate: (id: string, update: any) => void;
+    onDelete?: (id: string) => void;
     showDate?: boolean;
   }) => {
     const StatusIcon = statusIcons[booking.status as keyof typeof statusIcons] || AlertCircle;
@@ -114,6 +115,11 @@ export default function TeacherScheduleUnified() {
           {booking.status !== 'canceled' && (
             <Button size="sm" variant="outline" onClick={() => onStatusUpdate(booking.id, { status: 'canceled' })}>
               Cancel
+            </Button>
+          )}
+          {booking.status === 'canceled' && onDelete && (
+            <Button size="sm" variant="destructive" onClick={() => onDelete(booking.id)}>
+              Delete
             </Button>
           )}
         </div>
@@ -297,6 +303,7 @@ export default function TeacherScheduleUnified() {
                               key={booking.id} 
                               booking={booking} 
                               onStatusUpdate={(id: string, update: any) => setBookingStatus(id, update.status)}
+                              onDelete={(id: string) => deleteBooking(id)}
                             />
                           ))}
                         </div>
@@ -376,6 +383,7 @@ export default function TeacherScheduleUnified() {
                     key={booking.id} 
                     booking={booking} 
                     onStatusUpdate={updateBooking}
+                    onDelete={(id: string) => deleteAllBooking(id)}
                     showDate={true}
                   />
                 ))}

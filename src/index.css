@@ -198,4 +198,103 @@ All colors MUST be HSL.
     font-weight: 500;
     letter-spacing: -0.005em;
   }
+
+  /* Mobile-specific improvements */
+  @media (max-width: 640px) {
+    .mobile-optimized {
+      padding: 0.75rem;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    
+    .mobile-gap {
+      gap: 0.5rem;
+    }
+    
+    .mobile-button {
+      min-height: 44px; /* Touch-friendly minimum */
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  /* Custom breakpoint for very small screens */
+  @media (max-width: 375px) {
+    .xs-text-xs {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+    
+    .xs-px-2 {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
+
+  /* Touch-friendly interactions */
+  @media (pointer: coarse) {
+    button, .clickable {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* Fix click/touch issues */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure buttons are clickable */
+  button, [role="button"], [data-state] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Fix for iOS Safari double-tap zoom */
+  button:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Prevent text selection on interactive elements */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Active state for better touch feedback */
+  button:active, [role="button"]:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  /* Ensure proper focus for accessibility */
+  @media (prefers-reduced-motion: no-preference) {
+    button, [role="button"] {
+      transition: all 0.2s ease;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    button {
+      border: 2px solid;
+    }
+  }
+
+  /* Smooth scrolling on mobile */
+  @media (max-width: 768px) {
+    html {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
 }

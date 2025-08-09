@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 export type Booking = Tables<'bookings'>;
 export type Unavailability = Tables<'teacher_unavailability'>;
@@ -96,11 +96,14 @@ export function useTeacherSchedule(teacherId?: string, day?: Date) {
   }, [supabase, fetchDayData]);
 
   const setBookingStatus = useCallback(async (id: string, status: Booking['status']) => {
-    // Use the RPC function to avoid RLS issues
-    const { error } = await supabase.rpc('update_booking_status', {
-      p_booking_id: id,
-      p_status: status,
-    });
+    // Use direct update; RLS permits teacher updates on own bookings
+    const { error } = await supabase.from('bookings').update({ status }).eq('id', id);
+    if (error) throw error;
+    await fetchDayData();
+  }, [supabase, fetchDayData]);
+
+  const deleteBooking = useCallback(async (id: string) => {
+    const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (error) throw error;
     await fetchDayData();
   }, [supabase, fetchDayData]);
@@ -114,6 +117,7 @@ export function useTeacherSchedule(teacherId?: string, day?: Date) {
     createBlock,
     deleteBlock,
     setBookingStatus,
+    deleteBooking,
   };
 }
 

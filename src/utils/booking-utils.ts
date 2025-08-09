@@ -7,6 +7,7 @@ export interface TimeSlot {
   start: Date;
   end: Date;
   label: string; // e.g., "10:00 - 11:00"
+  duration: number; // duration in minutes
 }
 
 export function getWeekdayIndex(date: Date): number {
@@ -33,7 +34,8 @@ export function generateAvailableSlots(
   date: Date,
   availabilities: TeacherAvailability[],
   existingBookings: Booking[],
-  unavailability: { start_at: string; end_at: string }[] = []
+  unavailability: { start_at: string; end_at: string }[] = [],
+  requestedDuration?: number // Optional: override slot duration (30 or 60 minutes)
 ): TimeSlot[] {
   const weekday = getWeekdayIndex(date);
   const dayAvailabilities = availabilities.filter((a) => a.is_active && a.weekday === weekday);
@@ -43,7 +45,7 @@ export function generateAvailableSlots(
   const slots: TimeSlot[] = [];
 
   for (const a of dayAvailabilities) {
-    const slotMinutes = a.slot_minutes || 60;
+    const slotMinutes = requestedDuration || a.slot_minutes || 30;
     const start = parseTimeToDate(date, a.start_time);
     const end = parseTimeToDate(date, a.end_time);
     
@@ -69,7 +71,12 @@ export function generateAvailableSlots(
       const blocked = conflicts || unavailability.some((u) => overlaps(slotStart, slotEnd, new Date(u.start_at), new Date(u.end_at)));
 
       if (!blocked) {
-        slots.push({ start: slotStart, end: slotEnd, label: formatSlotLabel(slotStart, slotEnd) });
+        slots.push({ 
+          start: slotStart, 
+          end: slotEnd, 
+          label: formatSlotLabel(slotStart, slotEnd),
+          duration: slotMinutes
+        });
       }
 
       cursor = new Date(cursor.getTime() + slotMinutes * 60 * 1000);

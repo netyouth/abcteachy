@@ -7,7 +7,6 @@ import {
   Calendar, 
   MessageCircle, 
   LogOut, 
-  Plus,
   GraduationCap,
   RefreshCw,
   Clock,
@@ -131,56 +130,60 @@ export function TeacherDashboard() {
     <DashboardThemeScope>
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 relative">
         <header className="bg-background/95 backdrop-blur-sm shadow-sm border-b sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center space-x-4">
-                <GraduationCap className="h-8 w-8 text-primary" />
-                <div>
-                  <h1 className="text-2xl font-duolingo-heading text-foreground">Teacher Portal</h1>
-                  <p className="text-sm font-duolingo-body text-muted-foreground">Welcome back, {userName}!</p>
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-3 sm:py-4 gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md"></div>
+                  <GraduationCap className="h-6 w-6 sm:h-8 sm:w-8 text-primary relative z-10" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-duolingo-heading text-foreground truncate">Teacher Portal</h1>
+                  <p className="text-xs sm:text-sm font-duolingo-body text-muted-foreground truncate">Welcome back, {userName}!</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
                   aria-label="Refresh dashboard"
                   onClick={loadCounts}
+                  className="h-8 w-8 sm:h-10 sm:w-10"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
                 </Button>
                 <ModeToggle />
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">{role}</Badge>
-                <Button onClick={handleSignOut} variant="outline" size="sm" className="transition-all duration-200 hover:scale-105">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 hidden xs:inline-flex">{role}</Badge>
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="transition-all duration-200 hover:scale-105 text-xs sm:text-sm px-2 sm:px-3">
+                  <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Sign Out</span>
                 </Button>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
+        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8">
+          <div className="space-y-4 sm:space-y-6">
             <Tabs defaultValue="overview" className="space-y-4">
-              <TabsList className="flex flex-wrap gap-2">
+              <TabsList className="grid w-full grid-cols-4 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto">
                 <TabsTrigger value="overview" className="flex items-center gap-2" data-value="overview">
                   <GraduationCap className="h-4 w-4" />
-                  <span>Overview</span>
+                  <span className="text-xs sm:text-sm">Overview</span>
                 </TabsTrigger>
                 <TabsTrigger value="students" className="flex items-center gap-2" data-value="students">
                   <Users className="h-4 w-4" />
-                  <span>My Students</span>
+                  <span className="text-xs sm:text-sm">Students</span>
                 </TabsTrigger>
                 <TabsTrigger value="schedule" className="flex items-center gap-2" data-value="schedule">
                   <Calendar className="h-4 w-4" />
-                  <span>Schedule & Bookings</span>
+                  <span className="text-xs sm:text-sm">Schedule</span>
                 </TabsTrigger>
                 
                 <TabsTrigger value="messages" className="flex items-center gap-2" data-value="messages">
                   <MessageCircle className="h-4 w-4" />
-                  <span>Messages</span>
+                  <span className="text-xs sm:text-sm">Messages</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -196,12 +199,80 @@ export function TeacherDashboard() {
                   )}
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {/* Upcoming bookings at the top for quick glance */}
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Upcoming Bookings
+                  </CardTitle>
+                  <CardDescription>Your next scheduled lessons</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {bookingsLoading ? (
+                    <div className="space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-16" />
+                      ))}
+                    </div>
+                  ) : todaysAndUpcomingBookings.length === 0 ? (
+                    <div className="text-center py-6">
+                      <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                      <p className="text-sm text-muted-foreground">No upcoming bookings</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {todaysAndUpcomingBookings.map((booking) => {
+                        const StatusIcon = statusIcons[booking.status as keyof typeof statusIcons] || AlertCircle;
+                        const isToday = new Date(booking.start_at).toDateString() === new Date().toDateString();
+                        
+                        return (
+                          <div key={booking.id} className={`flex items-center justify-between rounded-lg border p-3 ${statusColors[booking.status as keyof typeof statusColors]}`}>
+                            <div className="flex items-center space-x-3">
+                              <div className="p-1.5 rounded-full bg-white/50">
+                                <StatusIcon className="h-3 w-3" />
+                              </div>
+                              <div className="space-y-1">
+                                <div className="text-sm font-medium flex items-center gap-2">
+                                  <Clock className="h-3 w-3" />
+                                  {isToday ? 'Today' : new Date(booking.start_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {new Date(booking.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                <Badge variant="outline" className="text-xs h-5">
+                                  {booking.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {todaysAndUpcomingBookings.length < upcomingBookings.length && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full mt-2"
+                          onClick={() => {
+                            const scheduleTab = document.querySelector('[data-value="schedule"]') as HTMLElement;
+                            scheduleTab?.click();
+                          }}
+                        >
+                          View all {upcomingBookings.length} bookings
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+
+            </div>
+
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {kpi.map(({ label, value, icon: Icon }) => (
                     <Card key={label} className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
                       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{label}</CardTitle>
-                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium truncate max-w-[70%]">{label}</CardTitle>
+                        <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       </CardHeader>
                       <CardContent>
                         {loading ? (
@@ -215,109 +286,7 @@ export function TeacherDashboard() {
                   ))}
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5" />
-                        Upcoming Bookings
-                      </CardTitle>
-                      <CardDescription>Your next scheduled lessons</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {bookingsLoading ? (
-                        <div className="space-y-3">
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <Skeleton key={i} className="h-16" />
-                          ))}
-                        </div>
-                      ) : todaysAndUpcomingBookings.length === 0 ? (
-                        <div className="text-center py-6">
-                          <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-2" />
-                          <p className="text-sm text-muted-foreground">No upcoming bookings</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {todaysAndUpcomingBookings.map((booking) => {
-                            const StatusIcon = statusIcons[booking.status as keyof typeof statusIcons] || AlertCircle;
-                            const isToday = new Date(booking.start_at).toDateString() === new Date().toDateString();
-                            
-                            return (
-                              <div key={booking.id} className={`flex items-center justify-between rounded-lg border p-3 ${statusColors[booking.status as keyof typeof statusColors]}`}>
-                                <div className="flex items-center space-x-3">
-                                  <div className="p-1.5 rounded-full bg-white/50">
-                                    <StatusIcon className="h-3 w-3" />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <div className="text-sm font-medium flex items-center gap-2">
-                                      <Clock className="h-3 w-3" />
-                                      {isToday ? 'Today' : new Date(booking.start_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {new Date(booking.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </div>
-                                    <Badge variant="outline" className="text-xs h-5">
-                                      {booking.status}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {todaysAndUpcomingBookings.length < upcomingBookings.length && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="w-full mt-2"
-                              onClick={() => {
-                                const scheduleTab = document.querySelector('[data-value="schedule"]') as HTMLElement;
-                                scheduleTab?.click();
-                              }}
-                            >
-                              View all {upcomingBookings.length} bookings
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Quick Actions</CardTitle>
-                      <CardDescription>Get started with common tasks</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-3">
-                      <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create New Class
-                      </Button>
-                      <Button className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" variant="outline">
-                        <Users className="mr-2 h-4 w-4" />
-                        Manage Students
-                      </Button>
-                      <Button 
-                        className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" 
-                        variant="outline"
-                        onClick={() => {
-                          const scheduleTab = document.querySelector('[data-value="schedule"]') as HTMLElement;
-                          scheduleTab?.click();
-                        }}
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Schedule & Bookings
-                      </Button>
-                      <Button 
-                        className="w-full justify-start transition-all duration-200 hover:scale-[1.02]" 
-                        variant="outline"
-                        onClick={() => {
-                          const messagesTab = document.querySelector('[data-value="messages"]') as HTMLElement;
-                          messagesTab?.click();
-                        }}
-                      >
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Messages
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
+                
               </TabsContent>
 
               <TabsContent value="students" className="space-y-4">
@@ -352,7 +321,7 @@ export function TeacherDashboard() {
                     </CardTitle>
                   </CardHeader>
                 </Card>
-                <SimpleChat className="h-[calc(100vh-340px)] min-h-[560px]" />
+                <SimpleChat className="h-[calc(100vh-300px)] sm:h-[calc(100vh-340px)] min-h-[420px] sm:min-h-[560px]" />
               </TabsContent>
             </Tabs>
           </div>
