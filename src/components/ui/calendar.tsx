@@ -29,7 +29,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "bg-background group/calendar p-2 sm:p-3 [--cell-size:2rem] sm:[--cell-size:2.25rem] lg:[--cell-size:2.5rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent max-w-full overflow-hidden",
+        "bg-background group/calendar p-2 sm:p-3 [--cell-size:2.25rem] sm:[--cell-size:2.25rem] lg:[--cell-size:2.5rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent max-w-full overflow-hidden",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
@@ -61,8 +61,8 @@ function Calendar({
           "h-9 w-9 sm:h-10 sm:w-10 lg:h-[--cell-size] lg:w-[--cell-size] select-none p-0 aria-disabled:opacity-50",
           defaultClassNames.button_next
         ),
-        month_caption: cn(
-          "flex h-8 sm:h-10 lg:h-[--cell-size] w-full items-center justify-center px-8 sm:px-10 lg:px-[--cell-size]",
+         month_caption: cn(
+          "flex h-10 sm:h-10 lg:h-[--cell-size] w-full items-center justify-center px-10 sm:px-10 lg:px-[--cell-size]",
           defaultClassNames.month_caption
         ),
         dropdowns: cn(
@@ -83,8 +83,8 @@ function Calendar({
         ),
         table: "w-full border-collapse table-fixed",
         weekdays: cn("flex w-full", defaultClassNames.weekdays),
-        weekday: cn(
-          "text-muted-foreground flex-1 select-none rounded-md text-[0.7rem] sm:text-[0.8rem] font-normal text-center p-1",
+         weekday: cn(
+          "text-muted-foreground flex-1 select-none rounded-md text-[0.8rem] sm:text-[0.9rem] font-normal text-center p-1",
           defaultClassNames.weekday
         ),
         week: cn("mt-1 sm:mt-2 flex w-full", defaultClassNames.week),
@@ -96,7 +96,7 @@ function Calendar({
           "text-muted-foreground select-none text-[0.8rem]",
           defaultClassNames.week_number
         ),
-        day: cn(
+         day: cn(
           "group/day relative aspect-square h-full w-full flex-1 select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-l-md [&:last-child[data-selected=true]_button]:rounded-r-md",
           // booked modifier: soft green background
           "data-[rdp-day_booked=true]:bg-emerald-50 data-[rdp-day_booked=true]:text-emerald-700",

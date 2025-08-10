@@ -198,7 +198,7 @@ export function TeacherDashboard() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-20 md:pb-6">
+        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-[calc(20px+env(safe-area-inset-bottom))] md:pb-6">
           <div className="space-y-4 sm:space-y-6">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
               <TabsList className="hidden md:grid w-full grid-cols-5 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto">
@@ -286,7 +286,7 @@ export function TeacherDashboard() {
                           className="w-full mt-2"
                           onClick={() => setActiveTab('schedule')}
                         >
-                          View all {upcomingBookings.length} bookings
+                          View all bookings
                         </Button>
                       )}
                     </div>

@@ -111,7 +111,7 @@ export function StudentDashboard() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-20 md:pb-6">
+        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-[calc(110px+env(safe-area-inset-bottom))] md:pb-6">
           <div className="space-y-4 sm:space-y-6">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
               <TabsList className="hidden md:grid w-full grid-cols-4 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto overflow-hidden">
@@ -234,7 +234,7 @@ export function StudentDashboard() {
           </div>
         </main>
         {/* Duolingo-like mobile bottom navigation */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 pointer-events-auto">
           <div className="grid grid-cols-4">
             <button
               onClick={() => setActiveTab('overview')}

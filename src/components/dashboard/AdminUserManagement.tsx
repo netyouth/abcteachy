@@ -200,12 +200,12 @@ export function AdminUserManagement() {
         <div className="flex items-center gap-2">
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" aria-label="Add user">
                 <Plus className="mr-2 h-4 w-4" />
                 Add User
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-[92vw] sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Create User</DialogTitle>
                 <DialogDescription>Accounts are confirmed automatically</DialogDescription>
@@ -236,7 +236,7 @@ export function AdminUserManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="gap-2">
                   <Button type="submit" className="w-full" disabled={isCreating}>
                     {isCreating ? 'Creating…' : 'Create User'}
                   </Button>
@@ -308,7 +308,7 @@ export function AdminUserManagement() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-[92vw] sm:max-w-lg">
                       <DialogHeader>
                         <DialogTitle>Edit User</DialogTitle>
                         <DialogDescription>Update the user\'s name or role.</DialogDescription>
@@ -332,7 +332,7 @@ export function AdminUserManagement() {
                           </Select>
                         </div>
                       </div>
-                      <DialogFooter>
+                      <DialogFooter className="gap-2">
                         <Button onClick={submitEdit} disabled={editState.isSubmitting}>
                           {editState.isSubmitting ? 'Saving…' : 'Save Changes'}
                         </Button>
@@ -348,7 +348,7 @@ export function AdminUserManagement() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-[92vw] sm:max-w-lg">
                       <DialogHeader>
                         <DialogTitle>Delete User</DialogTitle>
                         <DialogDescription>
@@ -364,7 +364,7 @@ export function AdminUserManagement() {
                           </span>
                         </div>
                       </div>
-                      <DialogFooter>
+                      <DialogFooter className="gap-2">
                         <Button variant="destructive" onClick={submitDelete} disabled={deleteState.isSubmitting}>
                           {deleteState.isSubmitting ? 'Deleting…' : 'Delete User'}
                         </Button>

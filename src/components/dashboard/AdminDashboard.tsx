@@ -80,7 +80,7 @@ export function AdminDashboard() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-20 md:pb-6">
+        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-[calc(20px+env(safe-area-inset-bottom))] md:pb-6">
           <div className="px-4 py-6 sm:px-0">
             {error && (
               <Alert className={`mb-6 ${error.includes('temporary policy') ? 'border-amber-500/50 text-amber-700 dark:border-amber-500 [&>svg]:text-amber-600' : 'border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive'}`}>
@@ -508,12 +508,12 @@ export function AdminDashboard() {
               <span className="text-[10px] mt-0.5">Analytics</span>
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
-              className={`flex flex-col items-center py-2 ${activeTab === 'settings' ? 'text-primary' : 'text-foreground/70'}`}
-              aria-label="Settings"
+              onClick={handleSignOut}
+              className="flex flex-col items-center py-2 text-foreground/70 hover:text-destructive transition-colors"
+              aria-label="Sign Out"
             >
-              <Settings className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5">Settings</span>
+              <LogOut className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Sign Out</span>
             </button>
           </div>
           <div className="h-[env(safe-area-inset-bottom)]" />

@@ -1,22 +1,17 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Calendar, 
   Clock, 
   Users, 
-  Plus, 
-  Filter,
   CheckCircle,
   XCircle,
   AlertCircle,
   Clock4,
-  Ban
+  
 } from 'lucide-react';
 import { STATUS_BADGE_TONE, listItem } from '@/components/dashboard/ui';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,10 +34,10 @@ const statusIcons = {
 export default function TeacherScheduleUnified() {
   const { user, role } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Filter removed for simplified UI
   
   // Day-specific schedule data
-  const { bookings: dayBookings, unavailability, loading: dayLoading, setBookingStatus, createBlock, deleteBlock } = useTeacherSchedule(user?.id, selectedDate);
+  const { bookings: dayBookings, loading: dayLoading, setBookingStatus } = useTeacherSchedule(user?.id, selectedDate);
   
   // All bookings data 
   const shouldFilterByTeacher = role !== 'admin';
@@ -62,27 +57,13 @@ export default function TeacherScheduleUnified() {
     return set;
   }, [allBookings]);
 
-  const [isBlockOpen, setIsBlockOpen] = useState(false);
-  const [blockStart, setBlockStart] = useState<string>('09:00');
-  const [blockEnd, setBlockEnd] = useState<string>('10:00');
-  const [blockReason, setBlockReason] = useState<string>('');
+  // Block time removed
 
-  const dayLabel = useMemo(() => selectedDate.toLocaleDateString(undefined, { 
-    weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' 
-  }), [selectedDate]);
+  // Removed day label and toISO utilities with the simplified UI
 
-  const toISO = (date: Date, hhmm: string) => {
-    const [hh, mm] = hhmm.split(':').map(Number);
-    const d = new Date(date);
-    d.setHours(hh || 0, mm || 0, 0, 0);
-    return d.toISOString();
-  };
-
-  const filteredAllBookings = useMemo(() => {
-    const base = allBookings.filter(b => b.status !== 'canceled');
-    if (statusFilter === 'all') return base;
-    return base.filter(booking => booking.status === statusFilter);
-  }, [allBookings, statusFilter]);
+  const allNonCanceledBookings = useMemo(() => {
+    return allBookings.filter(b => b.status !== 'canceled');
+  }, [allBookings]);
 
   const visibleDayBookings = useMemo(() => {
     return dayBookings.filter(b => b.status !== 'canceled');
@@ -137,30 +118,7 @@ export default function TeacherScheduleUnified() {
     );
   };
 
-  const UnavailabilityCard = ({ block, onDelete }: {
-    block: any;
-    onDelete: (id: string) => void;
-  }) => (
-    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 transition-all hover:shadow-md">
-      <div className="flex items-center space-x-4">
-        <div className="p-2 rounded-full bg-white">
-          <Ban className="h-4 w-4 text-gray-600" />
-        </div>
-        <div className="space-y-1">
-          <div className="font-medium flex items-center gap-2">
-            <Clock className="h-3 w-3" />
-            {new Date(block.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(block.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-          {block.reason && (
-            <div className="text-sm text-muted-foreground">{block.reason}</div>
-          )}
-        </div>
-      </div>
-      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(block.id)}>
-        Remove
-      </Button>
-    </div>
-  );
+  // Personal blocks UI removed
 
   return (
     <Card className="border-orange-200">
@@ -193,60 +151,6 @@ export default function TeacherScheduleUnified() {
                     booked: (day) => bookedDates.has(new Date(day.getFullYear(), day.getMonth(), day.getDate()).toDateString()),
                   }}
                 />
-
-                {/* Allow blocking only when selected date has no bookings */}
-                <Dialog open={isBlockOpen} onOpenChange={setIsBlockOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full" disabled={dayBookings.length > 0}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Block Time
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Block Time on {dayLabel}</DialogTitle>
-                      <DialogDescription>Add a personal block to prevent bookings.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-sm font-medium">Start Time</label>
-                        <input 
-                          type="time" 
-                          className="mt-1 w-full border rounded-md p-2" 
-                          value={blockStart} 
-                          onChange={(e) => setBlockStart(e.target.value)} 
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">End Time</label>
-                        <input 
-                          type="time" 
-                          className="mt-1 w-full border rounded-md p-2" 
-                          value={blockEnd} 
-                          onChange={(e) => setBlockEnd(e.target.value)} 
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <label className="text-sm font-medium">Reason (optional)</label>
-                        <input 
-                          type="text" 
-                          className="mt-1 w-full border rounded-md p-2" 
-                          placeholder="e.g., personal meeting, break"
-                          value={blockReason} 
-                          onChange={(e) => setBlockReason(e.target.value)} 
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={async () => { 
-                        await createBlock(toISO(selectedDate, blockStart), toISO(selectedDate, blockEnd), blockReason || undefined); 
-                        setIsBlockOpen(false); 
-                      }}>
-                        Save Block
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
               </div>
 
               {/* Day Schedule Section */}
@@ -278,75 +182,30 @@ export default function TeacherScheduleUnified() {
                         </div>
                       </div>
                     )}
-
-                    {/* Personal Blocks (hide empty state) */}
-                    {unavailability.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                          <Ban className="h-4 w-4" />
-                          Personal Blocks
-                        </div>
-                        <div className="space-y-3">
-                          {unavailability.map((block) => (
-                            <UnavailabilityCard 
-                              key={block.id} 
-                              block={block} 
-                              onDelete={deleteBlock}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
             </div>
 
           {/* All bookings list below day view */}
-                  <div className="space-y-4 pb-16 md:pb-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-white">
-                  <Users className="h-3 w-3 mr-1" />
-                  {filteredAllBookings.length} bookings
-                </Badge>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div className="space-y-4 pb-16 md:pb-0">
             {allLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-16" />
                 ))}
               </div>
-            ) : filteredAllBookings.length === 0 ? (
+            ) : allNonCanceledBookings.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <div className="text-lg font-medium mb-2">
-                  {statusFilter === 'all' ? 'No bookings yet' : `No ${statusFilter} bookings`}
+                  No bookings yet
                 </div>
-                <div className="text-muted-foreground">
-                  {statusFilter === 'all' 
-                    ? 'Bookings will appear here when students schedule classes with you'
-                    : `No bookings with ${statusFilter} status found`}
-                </div>
+                <div className="text-muted-foreground">Bookings will appear here when students schedule classes with you</div>
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredAllBookings.map((booking) => (
+                {allNonCanceledBookings.map((booking) => (
                   <BookingCard 
                     key={booking.id} 
                     booking={booking} 
