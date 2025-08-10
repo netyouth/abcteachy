@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, MessageCircle, Home, LogOut, Calendar, Clock, Star, User } from 'lucide-react';
+import { BookOpen, MessageCircle, Home, LogOut, Calendar, Clock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SimpleChat } from '@/components/SimpleChat';
@@ -17,7 +17,7 @@ import { listItem, STATUS_BADGE_TONE } from '@/components/dashboard/ui';
 export function StudentDashboard() {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'book' | 'chat' | 'profile'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'book' | 'chat' | 'profile'>('overview');
   const { bookings: myBookings, loading: bookingsLoading } = useBookings({ studentId: user?.id });
   const supabase = useMemo(() => createClient(), []);
   const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
@@ -114,14 +114,10 @@ export function StudentDashboard() {
         <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-20 md:pb-6">
           <div className="space-y-4 sm:space-y-6">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-              <TabsList className="hidden md:grid w-full grid-cols-5 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto overflow-hidden">
+              <TabsList className="hidden md:grid w-full grid-cols-4 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto overflow-hidden">
                 <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3 touch-manipulation cursor-pointer text-center min-w-0">
                   <Home className="h-4 w-4 pointer-events-none" />
                   <span className="text-[10px] sm:text-sm pointer-events-none truncate">Overview</span>
-                </TabsTrigger>
-                <TabsTrigger value="courses" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3 touch-manipulation cursor-pointer text-center min-w-0">
-                  <BookOpen className="h-4 w-4 pointer-events-none" />
-                  <span className="text-[10px] sm:text-sm pointer-events-none truncate">Courses</span>
                 </TabsTrigger>
                 <TabsTrigger value="book" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3 touch-manipulation cursor-pointer text-center min-w-0">
                   <Calendar className="h-4 w-4 pointer-events-none" />
@@ -193,46 +189,6 @@ export function StudentDashboard() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="courses" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <BookOpen className="h-5 w-5 text-primary" />
-                          Available Courses
-                        </CardTitle>
-                        <CardDescription>
-                          Browse and enroll in courses tailored to your learning goals
-                        </CardDescription>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        <Star className="mr-2 h-4 w-4" />
-                        View All
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-12">
-                      <div className="relative mx-auto mb-4">
-                        <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl"></div>
-                        <BookOpen className="mx-auto h-16 w-16 text-primary relative z-10" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">Course Catalog Coming Soon</h3>
-                      <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-                        We're preparing an amazing selection of courses for you. Get ready to embark on your learning journey!
-                      </p>
-                      <Button 
-                        className="bg-gradient-to-r from-primary to-primary/80 touch-manipulation"
-                        onClick={() => console.log('Get Notified clicked')}
-                      >
-                        Get Notified
-                        <Clock className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
               <TabsContent value="chat" className="space-y-4">
                 <SimpleChat className="h-[calc(100vh-180px)] sm:h-[calc(100vh-260px)] min-h-[400px] sm:min-h-[560px] border-0 rounded-none sm:border sm:border-border/50 sm:rounded-lg" />
@@ -279,7 +235,7 @@ export function StudentDashboard() {
         </main>
         {/* Duolingo-like mobile bottom navigation */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-          <div className="grid grid-cols-5">
+          <div className="grid grid-cols-4">
             <button
               onClick={() => setActiveTab('overview')}
               className={`flex flex-col items-center py-2 ${activeTab === 'overview' ? 'text-primary' : 'text-foreground/70'}`}
@@ -287,14 +243,6 @@ export function StudentDashboard() {
             >
               <Home className="h-5 w-5" />
               <span className="text-[10px] mt-0.5">Home</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('courses')}
-              className={`flex flex-col items-center py-2 ${activeTab === 'courses' ? 'text-primary' : 'text-foreground/70'}`}
-              aria-label="Courses"
-            >
-              <BookOpen className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5">Courses</span>
             </button>
             <button
               onClick={() => setActiveTab('book')}
