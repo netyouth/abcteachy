@@ -16,6 +16,7 @@ import { generateAvailableSlots, toISO, TimeSlot } from '@/utils/booking-utils';
 import { TablesInsert, Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { STATUS_BADGE_TONE, listItem } from '@/components/dashboard/ui';
 
 type Profile = Tables<'profiles'>;
 
@@ -30,9 +31,27 @@ export default function StudentBookingBrowser() {
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const { createBooking } = useBookings();
   const { bookings: myBookings, updateBooking, loading: bookingsLoading, refetch: refetchMyBookings } = useBookings({ studentId: user?.id });
+  const teacherNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    (teachers || []).forEach((t) => {
+      if (t.id) map[t.id] = (t as any).full_name || 'Teacher';
+    });
+    return map;
+  }, [teachers]);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
   const { toast } = useToast();
+
+  // Highlight days on the calendar where the student already has a booking
+  const bookedDates = useMemo(() => {
+    const set = new Set<string>();
+    (myBookings || []).forEach((b) => {
+      const d = new Date(b.start_at);
+      const normalized = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toDateString();
+      set.add(normalized);
+    });
+    return set;
+  }, [myBookings]);
 
   useEffect(() => {
     const loadTeachers = async () => {
@@ -161,8 +180,9 @@ export default function StudentBookingBrowser() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
+      <CardContent className="space-y-4 pb-2">
+        {/* Responsive single-column on mobile to prevent overlaps */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="space-y-3 lg:space-y-6">
             <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent">
               <CardHeader className="pb-3">
@@ -190,7 +210,7 @@ export default function StudentBookingBrowser() {
               </CardContent>
             </Card>
             
-            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent">
+              <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-primary" />
@@ -198,35 +218,26 @@ export default function StudentBookingBrowser() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-border/50 p-2 sm:p-3 pb-3 sm:pb-4 bg-background/50 overflow-hidden">
-                  <CalendarUI
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(d) => d && setSelectedDate(d)}
-                    disabled={(d) => d < new Date(new Date().toDateString())}
-                    className="rounded-md w-full mx-auto [--cell-size:2rem] sm:[--cell-size:2.25rem] lg:[--cell-size:2.5rem]"
-                    classNames={{
-                      months: "flex flex-col gap-2 w-full max-w-none",
-                      month: "flex w-full flex-col gap-1 sm:gap-2",
-                      table: "w-full border-collapse table-fixed",
-                      weekdays: "flex w-full",
-                      weekday: "flex-1 text-center text-[0.7rem] sm:text-[0.8rem] p-1",
-                      week: "mt-1 sm:mt-2 flex w-full",
-                      day: "flex-1 aspect-square relative",
-                      nav: "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1 z-10",
-                      button_previous: "h-7 w-7 sm:h-8 sm:w-8 p-0",
-                      button_next: "h-7 w-7 sm:h-8 sm:w-8 p-0",
-                      month_caption: "flex h-8 sm:h-10 w-full items-center justify-center px-8 sm:px-10",
-                      caption_label: "text-sm sm:text-base font-medium truncate",
-                      day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                      day_today: "bg-primary/10 text-primary font-semibold"
-                    }}
-                  />
-                </div>
+                  <div className="rounded-lg border border-border/50 p-2 sm:p-3 pb-3 sm:pb-4 bg-background/50 overflow-hidden">
+                    <CalendarUI
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(d) => d && setSelectedDate(d)}
+                      disabled={(d) => d < new Date(new Date().toDateString())}
+                      className="rounded-md border"
+                      // Highlight days where the student already has bookings
+                      modifiers={{
+                        booked: (day) =>
+                          bookedDates.has(
+                            new Date(day.getFullYear(), day.getMonth(), day.getDate()).toDateString()
+                          ),
+                      }}
+                    />
+                  </div>
               </CardContent>
             </Card>
             
-            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent mt-4">
+            <Card className="border-border/50 bg-gradient-to-br from-muted/50 to-transparent">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
@@ -260,6 +271,7 @@ export default function StudentBookingBrowser() {
             </Card>
           </div>
 
+          {/* Slots panel */}
           <div className="lg:col-span-2 space-y-3 lg:space-y-6">
             <Card className="border-border/50">
               <CardHeader className="pb-4">
@@ -274,26 +286,26 @@ export default function StudentBookingBrowser() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="min-h-[160px] lg:min-h-[180px]">
+                 <div className="min-h-[180px] lg:min-h-[220px]">
                   {!selectedTeacher ? (
                     <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-center px-4">
                       <User className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
                       <p className="text-xs sm:text-sm text-muted-foreground">Please select a teacher to view available slots</p>
                     </div>
-                  ) : loadingSlots ? (
+                   ) : loadingSlots ? (
                     <div className={`grid ${selectedDuration === 30 ? 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'} gap-2 sm:gap-3`}>
                       {Array.from({ length: selectedDuration === 30 ? 12 : 8 }).map((_, i) => (
                         <Skeleton key={i} className="h-10 sm:h-12 rounded-lg" />
                       ))}
                     </div>
-                  ) : slots.length === 0 ? (
+                   ) : slots.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-center px-4">
                       <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
                       <p className="text-xs sm:text-sm text-muted-foreground">No available slots for {selectedDate.toLocaleDateString()}</p>
                       <p className="text-xs text-muted-foreground mt-1">Try selecting a different date</p>
                     </div>
                   ) : (
-                    <ScrollArea className={`${selectedDuration === 30 ? 'h-[200px] sm:h-[260px] lg:h-[360px]' : 'h-[160px] sm:h-[200px] lg:h-[280px]'} pr-2 sm:pr-4`}>
+                      <ScrollArea className={`${selectedDuration === 30 ? 'h-[220px] sm:h-[280px] lg:h-[380px]' : 'h-[180px] sm:h-[220px] lg:h-[300px]'} pr-2 sm:pr-4`}>
                       <div className={`grid ${selectedDuration === 30 ? 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'} gap-2 sm:gap-3`}>
                         {slots.map((s, i) => (
                           <Button
@@ -303,7 +315,7 @@ export default function StudentBookingBrowser() {
                               console.log('Slot clicked:', s.label, i);
                               setSelectedSlotIndex(i);
                             }}
-                            className={`h-10 sm:h-12 flex-col gap-0.5 sm:gap-1 transition-all duration-200 hover:scale-105 text-xs sm:text-sm touch-manipulation cursor-pointer ${
+                              className={`h-10 sm:h-12 flex-col gap-0.5 sm:gap-1 transition-all duration-200 hover:scale-105 text-xs sm:text-sm touch-manipulation cursor-pointer whitespace-nowrap ${
                               selectedSlotIndex === i 
                                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
                                 : 'hover:border-primary/50 hover:bg-primary/5'
@@ -378,7 +390,7 @@ export default function StudentBookingBrowser() {
           </div>
         </div>
 
-        <div className="pt-3 lg:pt-6">
+        <div className="pt-3 lg:pt-6 pb-16 md:pb-0">
           <Card className="border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
             <CardHeader>
               <div className="flex items-start gap-3">
@@ -417,16 +429,10 @@ export default function StudentBookingBrowser() {
                       }
                     };
                     
-                    const getStatusColor = (status: string) => {
-                      switch (status) {
-                        case 'confirmed': return 'bg-green-50 border-green-200 text-green-800';
-                        case 'canceled': return 'bg-red-50 border-red-200 text-red-800';
-                        default: return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-                      }
-                    };
+  // Status colors centralized in STATUS_BADGE_TONE
                     
-                    return (
-                      <div key={b.id} className="flex flex-col gap-3 border border-border/50 rounded-lg p-3 sm:p-4 bg-background/50 hover:bg-background/80 transition-colors">
+                      return (
+                      <div key={b.id} className={listItem("flex flex-col gap-3")}>
                         <div className="space-y-1 sm:space-y-2 min-w-0">
                           <div className="flex items-center gap-2">
                             <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
@@ -436,10 +442,11 @@ export default function StudentBookingBrowser() {
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             {getStatusIcon(b.status)}
-                            <Badge variant="outline" className={`text-xs ${getStatusColor(b.status)}`}>
+                            <Badge variant="outline" className={`text-xs ${STATUS_BADGE_TONE[b.status] || ''}`}>
                               {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
                             </Badge>
                             <span className="text-xs text-muted-foreground">• {Math.round((new Date(b.end_at).getTime() - new Date(b.start_at).getTime()) / (1000 * 60))} min duration</span>
+                            <span className="text-xs text-muted-foreground">• with {b.teacher_id ? (teacherNameById[b.teacher_id] || 'Teacher') : 'Teacher'}</span>
                           </div>
                         </div>
                         <div className="flex items-center justify-end gap-2">

@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Search, MessageCircle, Send, Plus, Paperclip, Image as ImageIcon, Smile, Mic } from 'lucide-react';
+import { Search, MessageCircle, Send, Plus, Paperclip, Image as ImageIcon, Mic, ChevronLeft, Phone, MoreVertical } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface User {
@@ -41,6 +42,9 @@ export function SimpleChat({ className }: SimpleChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const [effectiveRole, setEffectiveRole] = useState<UserRole | null>(role ?? null);
+  // Mobile: toggle between list and chat screens
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
+  const isMobile = useIsMobile();
 
   const targetRole = effectiveRole === 'student' ? 'teacher' : 'student';
   const targetRolePlural = targetRole === 'teacher' ? 'Teachers' : 'Students';
@@ -155,7 +159,7 @@ export function SimpleChat({ className }: SimpleChatProps) {
           ? `private-${[user.id, selectedUser.id].sort().join('-')}`
           : ''
 
-    const resPrimary = await supabase.rpc('get_chat_messages', { room_name_param: primaryRoom, limit_param: 100 })
+        const resPrimary = await supabase.rpc('get_chat_messages', { room_name_param: primaryRoom, limit_param: 100 })
         const resLegacy = legacyRoom
           ? await supabase.rpc('get_chat_messages', { room_name_param: legacyRoom, limit_param: 100 })
           : { data: [] as any[] }
@@ -226,7 +230,7 @@ export function SimpleChat({ className }: SimpleChatProps) {
     if (!newMessage.trim() || !selectedUser || !user || !channelRef.current || !effectiveRole) return;
 
     const supabase = createClient();
-    const chatId = [user.id, selectedUser.id].sort().join('_');
+    const chatIdLocal = [user.id, selectedUser.id].sort().join('_');
     const messageId = crypto.randomUUID();
     
     const messageData = {
@@ -240,7 +244,7 @@ export function SimpleChat({ className }: SimpleChatProps) {
 
     // Save to database
     const { error: insertError } = await supabase.from('chat_messages').insert({
-      room_name: `private-${chatId}`,
+      room_name: `private-${chatIdLocal}`,
       sender_id: user.id,
       sender_role: effectiveRole as UserRole,
       content: newMessage,
@@ -250,7 +254,7 @@ export function SimpleChat({ className }: SimpleChatProps) {
       console.error('Failed to save message:', insertError)
       // Reload messages to reflect server state even after failure
       const { data } = await supabase
-        .rpc('get_chat_messages', { room_name_param: `private-${chatId}`, limit_param: 50 })
+        .rpc('get_chat_messages', { room_name_param: `private-${chatIdLocal}`, limit_param: 50 })
       if (data) {
         setMessages(data.map((msg: any) => ({
           id: msg.id,
@@ -283,9 +287,9 @@ export function SimpleChat({ className }: SimpleChatProps) {
 
   return (
     <div className={className}>
-      <div className="grid h-full gap-4 md:grid-cols-[320px_1fr]">
-        {/* Sidebar */}
-        <Card className="h-full overflow-hidden">
+      <div className="h-full grid md:grid-cols-[320px_1fr] gap-0 md:gap-4">
+        {/* Sidebar (List) */}
+        <Card className={`h-full overflow-hidden ${mobileView === 'chat' ? 'hidden md:block' : 'block'} ${isMobile ? 'rounded-none border-0 shadow-none' : ''}`}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Favorites</CardTitle>
@@ -312,11 +316,14 @@ export function SimpleChat({ className }: SimpleChatProps) {
                 {conversations.map((c) => (
                   <button
                     key={c.room_name}
-                    onClick={() => setSelectedUser({ id: c.other_user_id, full_name: c.other_full_name, role: c.other_role })}
-                    className="w-full rounded-lg px-3 py-2 hover:bg-muted/60 transition-colors"
+                    onClick={() => {
+                      setSelectedUser({ id: c.other_user_id, full_name: c.other_full_name, role: c.other_role })
+                      setMobileView('chat')
+                    }}
+                    className="w-full rounded-xl px-3 py-2 hover:bg-muted/60 transition-colors touch-manipulation"
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-10 w-10">
                         <AvatarFallback>
                           {c.other_full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                         </AvatarFallback>
@@ -339,11 +346,14 @@ export function SimpleChat({ className }: SimpleChatProps) {
                 {filteredUsers.map((u) => (
                   <button
                     key={u.id}
-                    onClick={() => setSelectedUser(u)}
-                    className="w-full rounded-lg px-3 py-2 hover:bg-muted/60 transition-colors"
+                    onClick={() => {
+                      setSelectedUser(u)
+                      setMobileView('chat')
+                    }}
+                    className="w-full rounded-xl px-3 py-2 hover:bg-muted/60 transition-colors touch-manipulation"
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-10 w-10">
                         <AvatarFallback>
                           {u.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </AvatarFallback>
@@ -352,7 +362,7 @@ export function SimpleChat({ className }: SimpleChatProps) {
                         <p className="font-medium truncate">{u.full_name}</p>
                         <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
                       </div>
-                      <div className={`ml-auto w-2 h-2 rounded-full ${onlineMap[u.id] ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      <div className={`${onlineMap[u.id] ? 'bg-green-500' : 'bg-gray-400'} ml-auto w-2 h-2 rounded-full`} />
                       <MessageCircle className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </button>
@@ -363,23 +373,44 @@ export function SimpleChat({ className }: SimpleChatProps) {
         </Card>
 
         {/* Chat panel */}
-        <Card className="h-full flex flex-col overflow-hidden">
-          <CardHeader className="border-b">
+        <Card className={`h-full flex flex-col overflow-hidden ${mobileView === 'list' ? 'hidden md:flex' : 'flex'} ${isMobile ? 'rounded-none border-0 shadow-none' : ''}`}>
+          <CardHeader className="border-b sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3 md:p-6">
             <div className="flex items-center gap-3">
+              {/* Back button on mobile */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileView('list')}
+                aria-label="Back to conversations"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
                   {selectedUser?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <CardTitle className="text-base truncate">{selectedUser ? selectedUser.full_name : 'Select a conversation'}</CardTitle>
                 {selectedUser && (
                   <p className="text-xs text-muted-foreground capitalize flex items-center gap-2">
                     <span className={`inline-block w-2 h-2 rounded-full ${isSelectedUserOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                    {isSelectedUserOnline ? 'Active now' : 'Offline'} · {selectedUser.role}
+                    {isSelectedUserOnline ? 'Online' : 'Offline'} · {selectedUser.role}
                   </p>
                 )}
               </div>
+              {/* Action icons to match common chat headers */}
+              {selectedUser && (
+                <div className="hidden xs:flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Call">
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0">
@@ -387,7 +418,7 @@ export function SimpleChat({ className }: SimpleChatProps) {
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {selectedUser && messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.from_user === user?.id ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${msg.from_user === user?.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${msg.from_user === user?.id ? 'bg-gradient-to-tl from-primary to-primary/80 text-primary-foreground' : 'bg-muted'}`}>
                       <p>{msg.content}</p>
                       <p className="text-[10px] opacity-70 mt-1">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
@@ -399,16 +430,15 @@ export function SimpleChat({ className }: SimpleChatProps) {
                 )}
               </div>
               {/* Input */}
-              <form onSubmit={sendMessage} className="border-t p-3 flex items-center gap-2">
+              <form onSubmit={sendMessage} className="border-t p-3 flex items-center gap-2 pb-[max(env(safe-area-inset-bottom),0px)]">
                 <Button type="button" variant="ghost" size="icon" className="shrink-0" disabled={!selectedUser || !isConnected}><Paperclip className="h-4 w-4" /></Button>
                 <Button type="button" variant="ghost" size="icon" className="shrink-0" disabled={!selectedUser || !isConnected}><ImageIcon className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" className="shrink-0" disabled={!selectedUser || !isConnected}><Smile className="h-4 w-4" /></Button>
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type message..."
                   disabled={!selectedUser || !isConnected}
-                  className="flex-1"
+                  className="flex-1 rounded-full focus-visible:ring-offset-0"
                 />
                 <Button type="button" variant="ghost" size="icon" className="shrink-0" disabled={!selectedUser || !isConnected}><Mic className="h-4 w-4" /></Button>
                 <Button type="submit" disabled={!newMessage.trim() || !selectedUser || !isConnected} size="icon" className="shrink-0">

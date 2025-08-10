@@ -2,28 +2,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, MessageCircle, Home, LogOut, Calendar, GraduationCap, RefreshCw, TrendingUp, Clock, Star, Award } from 'lucide-react';
+import { BookOpen, MessageCircle, Home, LogOut, Calendar, Clock, Star, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SimpleChat } from '@/components/SimpleChat';
 import StudentBookingBrowser from '@/components/dashboard/StudentBookingBrowser';
 import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { DashboardThemeScope } from '@/components/dashboard/DashboardThemeScope';
 import { ModeToggle } from '@/components/ModeToggle';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
+import { useBookings } from '@/hooks/useBookings';
+import { createClient } from '@/lib/supabase/client';
+import { listItem, STATUS_BADGE_TONE } from '@/components/dashboard/ui';
 
 export function StudentDashboard() {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
-  const supabase = createClient();
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'book' | 'chat'>('overview');
-  const [teachersCount, setTeachersCount] = useState<number | null>(null);
-  const [messagesCount, setMessagesCount] = useState<number | null>(null);
-  const [upcomingCount, setUpcomingCount] = useState<number | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'book' | 'chat' | 'profile'>('overview');
+  const { bookings: myBookings, loading: bookingsLoading } = useBookings({ studentId: user?.id });
+  const supabase = useMemo(() => createClient(), []);
+  const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
   
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
 
@@ -32,71 +29,44 @@ export function StudentDashboard() {
     navigate('/');
   };
 
-  const loadCounts = async () => {
-    setLoading(true);
-    // Count available teachers
-    const { count: teachers } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'teacher');
-
-    // Count messages (RLS limits to rooms the student can see)
-    const { count: msgs } = await supabase
-      .from('chat_messages')
-      .select('id', { count: 'exact', head: true });
-
-    // Count upcoming bookings for student (next 7 days)
-    const now = new Date();
-    const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    let upcoming = 0;
-    if (user?.id) {
-      const { count } = await supabase
-        .from('bookings')
-        .select('id', { count: 'exact', head: true })
-        .eq('student_id', user.id)
-        .gte('start_at', now.toISOString())
-        .lt('start_at', sevenDays.toISOString());
-      upcoming = count ?? 0;
-    }
-
-    setTeachersCount(teachers ?? 0);
-    setMessagesCount(msgs ?? 0);
-    setUpcomingCount(upcoming ?? 0);
-    setLoading(false);
-    setLastUpdated(new Date());
-  };
+  // Status colors centralized in STATUS_BADGE_TONE
 
   useEffect(() => {
-    loadCounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const kpi = useMemo(() => ([
-    { 
-      label: 'Available Teachers', 
-      value: teachersCount, 
-      icon: GraduationCap, 
-      description: 'Ready to help you learn',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    { 
-      label: 'Messages', 
-      value: messagesCount, 
-      icon: MessageCircle, 
-      description: 'Total conversations',
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    { 
-      label: 'Upcoming Classes', 
-      value: upcomingCount, 
-      icon: Calendar, 
-      description: 'Next 7 days',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-  ]), [teachersCount, messagesCount, upcomingCount]);
+    const loadTeacherNames = async () => {
+      const upcoming = (myBookings || [])
+        .filter((b) => new Date(b.start_at) >= new Date() && b.status !== 'canceled')
+        .map((b) => b.teacher_id)
+        .filter((v): v is string => !!v);
+      const uniqueTeacherIds = Array.from(new Set(upcoming));
+      if (uniqueTeacherIds.length === 0) {
+        setTeacherNames({});
+        return;
+      }
+      // Try direct select first
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', uniqueTeacherIds);
+      if (!error && Array.isArray(data)) {
+        const map: Record<string, string> = {};
+        for (const row of data as any[]) {
+          if (row.id) map[row.id] = row.full_name || 'Teacher';
+        }
+        setTeacherNames(map);
+        return;
+      }
+      // Fallback to RPC that lists available teachers; filter locally
+      const { data: rpcData } = await supabase.rpc('get_available_chat_users', { target_role_param: 'teacher' as any });
+      if (Array.isArray(rpcData)) {
+        const map: Record<string, string> = {};
+        for (const r of rpcData as any[]) {
+          if (uniqueTeacherIds.includes(r.id)) map[r.id] = r.full_name || 'Teacher';
+        }
+        setTeacherNames(map);
+      }
+    };
+    loadTeacherNames();
+  }, [myBookings, supabase]);
 
   return (
     <DashboardThemeScope>
@@ -118,19 +88,9 @@ export function StudentDashboard() {
               </div>
 
               <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Refresh dashboard"
-                  onClick={() => {
-                    console.log('Refresh clicked');
-                    loadCounts();
-                  }}
-                  className="hover:bg-primary/10 transition-colors h-8 w-8 sm:h-10 sm:w-10 touch-manipulation cursor-pointer"
-                >
-                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 pointer-events-none ${loading ? 'animate-spin' : ''}`} />
-                </Button>
-                <ModeToggle />
+                <div className="hidden md:block">
+                  <ModeToggle />
+                </div>
                 <Badge variant="outline" className="bg-gradient-to-r from-primary/10 to-primary/5 text-primary border-primary/20 font-semibold text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 hidden xs:inline-flex">
                   {role}
                 </Badge>
@@ -141,7 +101,7 @@ export function StudentDashboard() {
                   }} 
                   variant="outline" 
                   size="sm" 
-                  className="transition-all duration-200 hover:scale-105 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 text-xs sm:text-sm px-2 sm:px-3 touch-manipulation cursor-pointer"
+                  className="hidden md:inline-flex transition-all duration-200 hover:scale-105 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 text-xs sm:text-sm px-2 sm:px-3 touch-manipulation cursor-pointer"
                 >
                   <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2 pointer-events-none" />
                   <span className="hidden sm:inline pointer-events-none">Sign Out</span>
@@ -154,7 +114,7 @@ export function StudentDashboard() {
         <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-20 md:pb-6">
           <div className="space-y-4 sm:space-y-6">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-4 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto overflow-hidden">
+              <TabsList className="hidden md:grid w-full grid-cols-5 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto overflow-hidden">
                 <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3 touch-manipulation cursor-pointer text-center min-w-0">
                   <Home className="h-4 w-4 pointer-events-none" />
                   <span className="text-[10px] sm:text-sm pointer-events-none truncate">Overview</span>
@@ -171,143 +131,66 @@ export function StudentDashboard() {
                   <MessageCircle className="h-4 w-4 pointer-events-none" />
                   <span className="text-[10px] sm:text-sm pointer-events-none truncate">Chat</span>
                 </TabsTrigger>
+                <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3">
+                  <User className="h-4 w-4" />
+                  <span className="text-[10px] sm:text-sm">Profile</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-                  <div className="text-xs sm:text-sm text-muted-foreground">
-                    {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Loading...'}
-                  </div>
-                  {!loading && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => {
-                        console.log('Refresh in overview clicked');
-                        loadCounts();
-                      }} 
-                      className="self-start sm:self-auto touch-manipulation cursor-pointer"
-                    >
-                      <RefreshCw className="mr-2 h-3 w-3 sm:h-4 sm:w-4 pointer-events-none" /> 
-                      <span className="text-xs sm:text-sm pointer-events-none">Refresh</span>
-                    </Button>
-                  )}
-                </div>
-
-                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                  {kpi.map(({ label, value, icon: Icon, description, color, bgColor }, index) => (
-                    <Card key={label} className="group transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] border-border/50 bg-gradient-to-br from-card to-card/50 overflow-hidden relative cursor-pointer">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                        <div className="space-y-1">
-                          <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">{label}</CardTitle>
-                          <p className="text-xs text-muted-foreground">{description}</p>
-                        </div>
-                        <div className={`p-2 ${bgColor} rounded-lg group-hover:scale-110 transition-transform duration-200`}>
-                          <Icon className={`h-4 w-4 ${color}`} />
-                        </div>
-                      </CardHeader>
-                      <CardContent className="relative z-10">
-                        {loading ? (
-                          <div className="space-y-2">
-                            <Skeleton className="h-8 w-16" />
-                            <Skeleton className="h-1 w-full" />
+                <Card className="border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
+                  <CardHeader>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-secondary/10 rounded-lg flex-shrink-0">
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-base sm:text-lg">Upcoming Classes</CardTitle>
+                        <CardDescription className="text-sm">Your next scheduled classes</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 sm:space-y-3">
+                    {bookingsLoading ? (
+                      <div className="text-sm text-muted-foreground py-4">Loading...</div>
+                    ) : (() => {
+                      const upcoming = (myBookings || [])
+                        .filter((b) => new Date(b.start_at) >= new Date() && b.status !== 'canceled')
+                        .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+                      if (upcoming.length === 0) {
+                        return (
+                          <div className="text-center py-6 sm:py-8">
+                            <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3" />
+                            <p className="text-sm text-muted-foreground">No upcoming classes</p>
                           </div>
-                        ) : (
-                          <>
-                            <div className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent animate-in fade-in-50 duration-500" 
-                                 style={{ animationDelay: `${index * 100}ms` }}>
-                              {value ?? '—'}
-                            </div>
-                            {!loading && value !== null && (
-                              <div className="mt-3 h-2 bg-secondary/50 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full bg-gradient-to-r ${color.replace('text-', 'from-').replace('-600', '-400')} to-primary/70 rounded-full transition-all duration-1000 ease-out animate-in slide-in-from-left-full`}
-                                  style={{ 
-                                    width: `${Math.min((value / Math.max(10, value)) * 100, 100)}%`,
-                                    animationDelay: `${500 + index * 200}ms`
-                                  }}
-                                />
+                        );
+                      }
+                      return (
+                        <div className="space-y-2">
+                           {upcoming.map((b) => (
+                             <div key={b.id} className={listItem("flex flex-col gap-3")}>
+                              <div className="space-y-1 sm:space-y-2 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+                                  <span className="font-semibold text-sm sm:text-base">
+                                    {new Date(b.start_at).toLocaleDateString()} at {new Date(b.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                   <Badge variant="outline" className={`text-xs ${STATUS_BADGE_TONE[b.status] || ''}`}>
+                                    {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">• {Math.round((new Date(b.end_at).getTime() - new Date(b.start_at).getTime()) / (1000 * 60))} min duration</span>
+                                  <span className="text-xs text-muted-foreground">• with {b.teacher_id ? (teacherNames[b.teacher_id] || 'Teacher') : 'Teacher'}</span>
+                                </div>
                               </div>
-                            )}
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-2">
-                  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-primary" />
-                        <CardTitle>Quick Actions</CardTitle>
-                      </div>
-                      <CardDescription>Jump back into learning</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <Button 
-                        className="w-full justify-start transition-all duration-200 hover:scale-[1.02] bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 touch-manipulation" 
-                        size="lg"
-                        onClick={() => console.log('Browse Courses clicked')}
-                      >
-                        <BookOpen className="mr-2 sm:mr-3 h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 text-left text-sm sm:text-base">Browse Courses</span>
-                        <span className="text-xs opacity-70 hidden sm:inline">0 active</span>
-                      </Button>
-                      <Button 
-                        className="w-full justify-start transition-all duration-200 hover:scale-[1.02] touch-manipulation" 
-                        variant="outline" 
-                        size="lg"
-                        onClick={() => console.log('Start Chat clicked')}
-                      >
-                        <MessageCircle className="mr-2 sm:mr-3 h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 text-left text-sm sm:text-base">Start Chat</span>
-                        <span className="text-xs opacity-70 hidden sm:inline">{messagesCount || 0} msgs</span>
-                      </Button>
-                      <Button 
-                        className="w-full justify-start transition-all duration-200 hover:scale-[1.02] touch-manipulation" 
-                        variant="outline" 
-                        size="lg"
-                        onClick={() => console.log('Book a Class clicked')}
-                      >
-                        <Calendar className="mr-2 sm:mr-3 h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 text-left text-sm sm:text-base">Book a Class</span>
-                        <span className="text-xs opacity-70 hidden sm:inline">{upcomingCount || 0} upcoming</span>
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <Award className="h-5 w-5 text-secondary-foreground" />
-                        <CardTitle>Learning Progress</CardTitle>
-                      </div>
-                      <CardDescription>Your educational journey</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Overall Progress</span>
-                          <span className="font-medium">25%</span>
+                            </div>
+                          ))}
                         </div>
-                        <Progress value={25} className="h-2" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 sm:gap-4 pt-2">
-                        <div className="text-center">
-                          <div className="text-base sm:text-lg font-bold text-primary">0</div>
-                          <div className="text-xs text-muted-foreground">Courses</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-base sm:text-lg font-bold text-secondary-foreground">0h</div>
-                          <div className="text-xs text-muted-foreground">Study Time</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="courses" className="space-y-4">
@@ -352,47 +235,94 @@ export function StudentDashboard() {
               </TabsContent>
 
               <TabsContent value="chat" className="space-y-4">
-                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent border-dashed">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <MessageCircle className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-base text-foreground">
-                          Private Teacher Chat
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Chat privately with your teacher. All conversations are automatically saved.
-                        </p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-                <SimpleChat className="h-[calc(100vh-280px)] sm:h-[calc(100vh-340px)] min-h-[400px] sm:min-h-[560px] border border-border/50 rounded-lg" />
+                <SimpleChat className="h-[calc(100vh-180px)] sm:h-[calc(100vh-260px)] min-h-[400px] sm:min-h-[560px] border-0 rounded-none sm:border sm:border-border/50 sm:rounded-lg" />
               </TabsContent>
 
               <TabsContent value="book" className="space-y-4 pb-4 md:pb-0">
                 <StudentBookingBrowser />
               </TabsContent>
+
+              <TabsContent value="profile" className="space-y-4">
+                <Card className="border-primary/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5 text-primary" />
+                      Profile
+                    </CardTitle>
+                    <CardDescription>Manage appearance and account</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium">Theme</div>
+                        <div className="text-xs text-muted-foreground">Light/Dark mode</div>
+                      </div>
+                      <ModeToggle />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium">Role</div>
+                        <Badge variant="outline" className="mt-1 capitalize">{role}</Badge>
+                      </div>
+                      <Button 
+                        onClick={handleSignOut} 
+                        variant="outline"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" /> Sign Out
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
-        {/* Mobile primary action: Book a class */}
-        {activeTab !== 'book' && (
-          <div className="fixed bottom-4 right-4 z-40 md:hidden">
-            <Button
-              size="lg"
-              className="rounded-full shadow-lg px-4 h-11 bg-primary text-primary-foreground"
-              onClick={() => setActiveTab('book')}
-              aria-label="Book a class"
+        {/* Duolingo-like mobile bottom navigation */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+          <div className="grid grid-cols-5">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'overview' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Overview"
             >
-              <Calendar className="h-4 w-4 mr-1.5" />
-              <span className="text-sm">Book</span>
-            </Button>
-            <div className="h-[env(safe-area-inset-bottom)]" />
+              <Home className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Home</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('courses')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'courses' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Courses"
+            >
+              <BookOpen className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Courses</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('book')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'book' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Book"
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Book</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'chat' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Chat"
+            >
+              <MessageCircle className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Chat</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'profile' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Profile"
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Profile</span>
+            </button>
           </div>
-        )}
+          <div className="h-[env(safe-area-inset-bottom)]" />
+        </nav>
       </div>
     </DashboardThemeScope>
   );

@@ -13,7 +13,7 @@ import {
   BarChart3,
   Database,
   MessageCircle,
-  RefreshCw
+  
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,12 +27,14 @@ import { ModeToggle } from '@/components/ModeToggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import * as React from 'react';
+import { metricCardHover } from '@/components/dashboard/ui';
 
 export function AdminDashboard() {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
   const { stats, recentUsers, recentActivity, loading, error, refreshData } = useAdminData();
   const [lastUpdated, setLastUpdated] = React.useState<Date | null>(null);
+  const [activeTab, setActiveTab] = React.useState<'overview' | 'users' | 'analytics' | 'bookings' | 'settings'>('overview');
   
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Admin';
 
@@ -54,8 +56,8 @@ export function AdminDashboard() {
     <DashboardThemeScope>
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 relative">
         <header className="bg-background/95 backdrop-blur-sm shadow-sm border-b sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-3 sm:py-4">
               <div className="flex items-center space-x-4">
                 <Shield className="h-8 w-8 text-primary" />
                 <div>
@@ -65,17 +67,11 @@ export function AdminDashboard() {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Refresh dashboard"
-                  onClick={async () => { await refreshData(); setLastUpdated(new Date()); }}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-                <ModeToggle />
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">{role}</Badge>
-                <Button onClick={handleSignOut} variant="outline" size="sm" className="transition-all duration-200 hover:scale-105">
+                <div className="hidden md:block">
+                  <ModeToggle />
+                </div>
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 hidden xs:inline-flex">{role}</Badge>
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="hidden md:inline-flex transition-all duration-200 hover:scale-105">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </Button>
@@ -84,7 +80,7 @@ export function AdminDashboard() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <main className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-20 md:pb-6">
           <div className="px-4 py-6 sm:px-0">
             {error && (
               <Alert className={`mb-6 ${error.includes('temporary policy') ? 'border-amber-500/50 text-amber-700 dark:border-amber-500 [&>svg]:text-amber-600' : 'border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive'}`}>
@@ -123,29 +119,35 @@ export function AdminDashboard() {
               </Alert>
             )}
 
-            <Tabs defaultValue="overview" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="users">User Management</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                <TabsTrigger value="bookings">Bookings</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
+              <TabsList className="hidden md:grid w-full grid-cols-5 gap-0.5 sm:gap-1 bg-muted/50 p-1 h-auto">
+                <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3">
+                  <Shield className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3">
+                  <Users className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Users</span>
+                </TabsTrigger>
+                <TabsTrigger value="bookings" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Bookings</span>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 py-1.5 sm:py-3 px-0.5 sm:px-3">
+                  <Settings className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Settings</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Loading...'}
-                  </div>
-                  {!loading && (
-                    <Button size="sm" variant="outline" onClick={async () => { await refreshData(); setLastUpdated(new Date()); }}>
-                      <RefreshCw className="mr-2 h-4 w-4" /> Refresh
-                    </Button>
-                  )}
-                </div>
+                <div className="text-sm text-muted-foreground">{lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Loading...'}</div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                  <Card className={metricCardHover}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                       <Users className="h-4 w-4 text-muted-foreground" />
@@ -160,7 +162,7 @@ export function AdminDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                  <Card className={metricCardHover}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -175,38 +177,33 @@ export function AdminDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                  <Card className={metricCardHover}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-                      <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       {loading ? (
                         <Skeleton className="h-8 w-16 mb-1" />
                       ) : (
-                        <div className="text-2xl font-bold">{stats.totalMessages}</div>
+                        <div className="text-2xl font-bold">{stats.totalBookings ?? 0}</div>
                       )}
-                      <p className="text-xs text-muted-foreground">All-time messages</p>
+                      <p className="text-xs text-muted-foreground">All-time bookings</p>
                     </CardContent>
                   </Card>
 
-                  <Card className="transition-all duration-200 hover:shadow-lg hover:scale-[1.02]">
+                  <Card className={metricCardHover}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                      <Database className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-sm font-medium">Today's Bookings</CardTitle>
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       {loading ? (
-                        <Skeleton className="h-8 w-24 mb-1" />
+                        <Skeleton className="h-8 w-16 mb-1" />
                       ) : (
-                        <div className={`text-2xl font-bold ${
-                          stats.systemStatus === 'good' ? 'text-secondary-green' :
-                          stats.systemStatus === 'warning' ? 'text-yellow-600' : 'text-destructive'
-                        }`}>
-                          {stats.systemStatus === 'good' ? 'Good' : stats.systemStatus === 'warning' ? 'Warning' : 'Error'}
-                        </div>
+                        <div className="text-2xl font-bold">{stats.activeBookingsToday ?? 0}</div>
                       )}
-                      <p className="text-xs text-muted-foreground">Realtime, database and auth</p>
+                      <p className="text-xs text-muted-foreground">Starting today</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -475,6 +472,52 @@ export function AdminDashboard() {
             </Tabs>
           </div>
         </main>
+        {/* Duolingo-like mobile bottom navigation for Admin */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+          <div className="grid grid-cols-5">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'overview' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Overview"
+            >
+              <Shield className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Home</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'users' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Users"
+            >
+              <Users className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Users</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('bookings')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'bookings' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Bookings"
+            >
+              <BookOpen className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Bookings</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'analytics' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Analytics"
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Analytics</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex flex-col items-center py-2 ${activeTab === 'settings' ? 'text-primary' : 'text-foreground/70'}`}
+              aria-label="Settings"
+            >
+              <Settings className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5">Settings</span>
+            </button>
+          </div>
+          <div className="h-[env(safe-area-inset-bottom)]" />
+        </nav>
       </div>
     </DashboardThemeScope>
   );

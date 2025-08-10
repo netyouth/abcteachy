@@ -15,7 +15,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  RefreshCw,
   Search,
   Shield,
   Users
@@ -35,7 +34,7 @@ export function AdminUserManagement() {
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // Removed manual refresh; data reloads on actions
   const [users, setUsers] = useState<EditableUser[]>([]);
   const [search, setSearch] = useState<string>('');
 
@@ -95,11 +94,7 @@ export function AdminUserManagement() {
     );
   }, [users, search]);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await loadUsers();
-    setIsRefreshing(false);
-  };
+  // No explicit refresh button; actions reload data via loadUsers
 
   const openEdit = (user: EditableUser) => {
     setEditState({
@@ -197,31 +192,27 @@ export function AdminUserManagement() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 space-y-0">
         <div>
           <CardTitle>User Management</CardTitle>
-          <CardDescription>View, create, edit, and delete user accounts</CardDescription>
+          <CardDescription>View, create, edit, and delete users</CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isRefreshing}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="" size="sm">
+              <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Add User
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-                <DialogDescription>New accounts are confirmed automatically.</DialogDescription>
+                <DialogTitle>Create User</DialogTitle>
+                <DialogDescription>Accounts are confirmed automatically</DialogDescription>
               </DialogHeader>
               <form onSubmit={submitCreate} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="create_fullName">Full Name</Label>
+                  <Label htmlFor="create_fullName">Full name</Label>
                   <Input id="create_fullName" value={createForm.fullName} onChange={(e) => setCreateForm(f => ({ ...f, fullName: e.target.value }))} required />
                 </div>
                 <div className="space-y-2">
@@ -257,11 +248,11 @@ export function AdminUserManagement() {
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-2 mb-4">
-          <div className="relative w-full max-w-md">
+          <div className="relative w-full">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, role, or id…"
-              className="pl-8"
+              placeholder="Search by name or role"
+              className="pl-8 h-11"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -288,18 +279,17 @@ export function AdminUserManagement() {
         ) : (
           <div className="space-y-2">
             {filteredUsers.map((u) => (
-              <div key={u.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <div key={u.id} className="flex items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-medium text-primary">{u.full_name.charAt(0).toUpperCase()}</span>
                   </div>
-                  <div>
-                    <p className="font-medium">{u.full_name}</p>
-                    <p className="text-xs text-muted-foreground">ID: {u.id}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.full_name}</p>
                     <p className="text-xs text-muted-foreground">Joined {new Date(u.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <Badge variant="outline" className={
                     u.role === 'admin'
                       ? 'bg-destructive/10 text-destructive border-destructive/20'
@@ -314,7 +304,7 @@ export function AdminUserManagement() {
                     if (!open) setEditState(prev => ({ ...prev, isOpen: false }));
                   }}>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(u)}>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(u)} aria-label="Edit user">
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
@@ -354,7 +344,7 @@ export function AdminUserManagement() {
                     if (!open) setDeleteState(prev => ({ ...prev, isOpen: false }));
                   }}>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => openDelete(u)}>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => openDelete(u)} aria-label="Delete user">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>

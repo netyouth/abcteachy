@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { listItem, STATUS_BADGE_TONE } from '@/components/dashboard/ui';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -93,10 +94,11 @@ export default function TeacherSchedule() {
                   <div className="text-sm text-muted-foreground">No bookings</div>
                 ) : (
                   bookings.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between border rounded-md p-3">
+                    <div key={b.id} className={listItem("flex items-center justify-between p-3 rounded-md border")}
+                    >
                       <div className="space-y-1">
                         <div className="font-medium">{new Date(b.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(b.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                        <div className="text-xs text-muted-foreground">Status: <Badge variant="outline">{b.status}</Badge></div>
+                        <div className="text-xs text-muted-foreground">Status: <Badge variant="outline" className={`${STATUS_BADGE_TONE[b.status] || ''}`}>{b.status}</Badge></div>
                       </div>
                       <div className="flex items-center gap-2">
                         {b.status !== 'confirmed' && (

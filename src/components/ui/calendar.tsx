@@ -53,12 +53,12 @@ function Calendar({
         ),
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
-          "h-7 w-7 sm:h-8 sm:w-8 lg:h-[--cell-size] lg:w-[--cell-size] select-none p-0 aria-disabled:opacity-50",
+          "h-9 w-9 sm:h-10 sm:w-10 lg:h-[--cell-size] lg:w-[--cell-size] select-none p-0 aria-disabled:opacity-50",
           defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({ variant: buttonVariant }),
-          "h-7 w-7 sm:h-8 sm:w-8 lg:h-[--cell-size] lg:w-[--cell-size] select-none p-0 aria-disabled:opacity-50",
+          "h-9 w-9 sm:h-10 sm:w-10 lg:h-[--cell-size] lg:w-[--cell-size] select-none p-0 aria-disabled:opacity-50",
           defaultClassNames.button_next
         ),
         month_caption: cn(
@@ -98,6 +98,8 @@ function Calendar({
         ),
         day: cn(
           "group/day relative aspect-square h-full w-full flex-1 select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-l-md [&:last-child[data-selected=true]_button]:rounded-r-md",
+          // booked modifier: soft green background
+          "data-[rdp-day_booked=true]:bg-emerald-50 data-[rdp-day_booked=true]:text-emerald-700",
           defaultClassNames.day
         ),
         range_start: cn(
@@ -200,6 +202,8 @@ function CalendarDayButton({
       className={cn(
         "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square h-full w-full text-[0.7rem] sm:text-sm flex-col gap-0.5 sm:gap-1 font-normal leading-none data-[range-end=true]:rounded-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] [&>span]:text-[0.6rem] [&>span]:sm:text-xs [&>span]:opacity-70 touch-manipulation",
         defaultClassNames.day,
+        // When a custom DayPicker modifier named "booked" is true, tint the day green
+        modifiers.booked && "bg-emerald-50 text-emerald-700",
         className
       )}
       {...props}

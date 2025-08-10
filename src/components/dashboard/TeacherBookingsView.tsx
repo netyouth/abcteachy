@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBookings } from '@/hooks/useBookings';
 import { Clock, User, Calendar, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { STATUS_BADGE_TONE, listItem } from '@/components/dashboard/ui';
 
 export default function TeacherBookingsView() {
   const { user, role, loading: authLoading } = useAuth();
@@ -41,15 +42,7 @@ export default function TeacherBookingsView() {
     return `${minutes}m`;
   };
 
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-300';
-      case 'completed': return 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-300';
-      case 'canceled': return 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-300';
-      default: return 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-300';
-    }
-  };
+  // Status tones provided by STATUS_BADGE_TONE
 
   return (
     <Card className="border-border/50">
@@ -86,7 +79,7 @@ export default function TeacherBookingsView() {
               const isToday = new Date(b.start_at).toDateString() === new Date().toDateString();
               
               return (
-                <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-border/50 rounded-lg p-4 bg-background/50 hover:bg-background/80 transition-colors gap-3 sm:gap-0">
+                <div key={b.id} className={listItem("flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 p-4")}>
                   <div className="space-y-2 min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
@@ -106,7 +99,7 @@ export default function TeacherBookingsView() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(b.status)}
-                        <Badge variant="outline" className={`text-xs ${getStatusColor(b.status)}`}>
+                        <Badge variant="outline" className={`text-xs ${STATUS_BADGE_TONE[b.status] || ''}`}>
                           {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
                         </Badge>
                       </div>

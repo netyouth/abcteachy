@@ -14,3 +14,4 @@ grant select, insert, update, delete on table public.teacher_availability to aut
 commit;
 
 
+

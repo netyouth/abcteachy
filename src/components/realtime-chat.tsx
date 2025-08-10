@@ -6,6 +6,7 @@ import {
   useRealtimeChat,
 } from '@/hooks/use-realtime-chat'
 import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Input } from '@/components/ui/input'
 import { Send } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -28,6 +29,7 @@ export function RealtimeChat({
   messages: initialMessages = [],
 }: RealtimeChatProps) {
   const { containerRef, scrollToBottom } = useChatScroll()
+  const isMobile = useIsMobile()
 
   const {
     messages: realtimeMessages,
@@ -85,7 +87,7 @@ export function RealtimeChat({
   const isOtherUserOnline = onlineUsersCount > 1; // Shows if another user is present
 
   return (
-    <div className="flex flex-col h-full w-full bg-background text-foreground antialiased">
+    <div className={`flex flex-col h-full w-full bg-background text-foreground antialiased ${isMobile ? 'rounded-none' : ''}`}>
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -141,7 +143,7 @@ export function RealtimeChat({
       <form onSubmit={handleSendMessage} className="flex w-full gap-2 border-t border-border p-4">
         <Input
           className={cn(
-            'rounded-full bg-background text-sm transition-all duration-300',
+            'rounded-full bg-background text-sm transition-all duration-300 focus-visible:ring-offset-0',
             isConnected && newMessage.trim() ? 'w-[calc(100%-36px)]' : 'w-full'
           )}
           type="text"

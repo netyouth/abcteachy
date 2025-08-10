@@ -13,6 +13,7 @@ export interface AdminStats {
   totalBookings?: number;
   canceledBookings?: number;
   completedBookings?: number;
+  activeBookingsToday?: number;
 }
 
 export interface RecentActivity {
@@ -52,7 +53,11 @@ export function useAdminData() {
     studentCount: 0,
     activeConversations: 0,
     totalMessages: 0,
-    systemStatus: 'good'
+    systemStatus: 'good',
+    totalBookings: 0,
+    canceledBookings: 0,
+    completedBookings: 0,
+    activeBookingsToday: 0,
   });
   
   const [recentUsers, setRecentUsers] = useState<AdminUser[]>([]);
@@ -89,6 +94,9 @@ export function useAdminData() {
           systemStatus: dashboardData.stats.systemStatus as AdminStats['systemStatus'] || 'good'
         });
 
+        // Fetch booking-related stats (counts) separately so the overview can show them
+        await fetchBookingStats();
+
         // Update recent users
         setRecentUsers(dashboardData.recentUsers || []);
 
@@ -100,6 +108,62 @@ export function useAdminData() {
       // Try individual queries as fallback
       console.log('Falling back to individual queries due to error...');
       await fetchDataIndividually();
+    }
+  };
+
+  // Helper to get today's start/end in ISO (UTC)
+  const getTodayRangeIso = () => {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { startIso: start.toISOString(), endIso: end.toISOString() };
+  };
+
+  // Fetch booking counts used on the admin overview
+  const fetchBookingStats = async () => {
+    try {
+      let totalBookings = 0;
+      let canceledBookings = 0;
+      let completedBookings = 0;
+      let activeBookingsToday = 0;
+
+      const { count: total } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true });
+      totalBookings = total || 0;
+
+      const { count: canceled } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'canceled');
+      canceledBookings = canceled || 0;
+
+      const { count: completed } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'completed');
+      completedBookings = completed || 0;
+
+      const { startIso, endIso } = getTodayRangeIso();
+      const { count: todayActive } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .gte('start_at', startIso)
+        .lt('start_at', endIso)
+        .neq('status', 'canceled');
+      activeBookingsToday = todayActive || 0;
+
+      setStats(prev => ({
+        ...prev,
+        totalBookings,
+        canceledBookings,
+        completedBookings,
+        activeBookingsToday,
+      }));
+    } catch (e) {
+      // Silently ignore; leave defaults
     }
   };
 
@@ -160,6 +224,7 @@ export function useAdminData() {
         let totalBookings = 0;
         let canceledBookings = 0;
         let completedBookings = 0;
+        let activeBookingsToday = 0;
         try {
           const { count: total } = await supabase
             .from('bookings')
@@ -175,6 +240,15 @@ export function useAdminData() {
             .select('id', { count: 'exact', head: true })
             .eq('status', 'completed');
           completedBookings = completed || 0;
+
+          const { startIso, endIso } = getTodayRangeIso();
+          const { count: todayActive } = await supabase
+            .from('bookings')
+            .select('id', { count: 'exact', head: true })
+            .gte('start_at', startIso)
+            .lt('start_at', endIso)
+            .neq('status', 'canceled');
+          activeBookingsToday = todayActive || 0;
         } catch (e) {
           // ignore
         }
@@ -186,6 +260,7 @@ export function useAdminData() {
           totalBookings,
           canceledBookings,
           completedBookings,
+          activeBookingsToday,
         }));
       } catch (convError) {
         console.warn('Could not fetch conversations/messages:', convError);

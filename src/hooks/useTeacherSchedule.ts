@@ -22,12 +22,15 @@ export function useTeacherSchedule(teacherId?: string, day?: Date) {
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
-      const [{ data: b }, { data: u }] = await Promise.all([
-        supabase.rpc('get_teacher_day_schedule', {
-          p_teacher_id: teacherId,
-          p_day_start: dayStart.toISOString(),
-          p_day_end: dayEnd.toISOString(),
-        }),
+      // Prefer direct select with join to include student name; fallback to RPC if needed
+      const [{ data: bookingsJoined, error: joinError }, { data: u }] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('id,start_at,end_at,status,student_id,teacher_id,created_at,updated_at, student:profiles!bookings_student_id_fkey(full_name)')
+          .eq('teacher_id', teacherId)
+          .gte('start_at', dayStart.toISOString())
+          .lt('end_at', dayEnd.toISOString())
+          .order('start_at', { ascending: true }),
         supabase
           .from('teacher_unavailability')
           .select('*')
@@ -37,7 +40,22 @@ export function useTeacherSchedule(teacherId?: string, day?: Date) {
           .order('start_at', { ascending: true })
       ]);
 
-      setBookings((b as Booking[]) || []);
+      let bookingsResult: any[] = bookingsJoined as any[];
+      if (joinError) {
+        const { data: bRpc } = await supabase.rpc('get_teacher_day_schedule', {
+          p_teacher_id: teacherId,
+          p_day_start: dayStart.toISOString(),
+          p_day_end: dayEnd.toISOString(),
+        });
+        bookingsResult = (bRpc as any[]) || [];
+      }
+
+      const withNames = (bookingsResult || []).map((b: any) => ({
+        ...b,
+        student_name: b.student?.full_name || b.student_name || undefined,
+      }));
+
+      setBookings((withNames as unknown as Booking[]) || []);
       setUnavailability((u as Unavailability[]) || []);
     } catch (e: any) {
       setError(e.message || 'Failed to load schedule');

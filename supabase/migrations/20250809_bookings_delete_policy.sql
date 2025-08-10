@@ -17,3 +17,4 @@ create policy "bookings_delete_canceled_teacher_or_admin"
 commit;
 
 
+
